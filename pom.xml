@@ -7,11 +7,11 @@
         <relativePath/>
         <!--  lookup parent from repository  -->
     </parent>
-    <groupId>com.acme</groupId>
-    <artifactId>learning-center-platform</artifactId>
+    <groupId>com.backendsems</groupId>
+    <artifactId>backend-sems</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ACME learning-center-platform</name>
-    <description>ACME Learning Platform application REST API documentation</description>
+    <name>SEMS Backend</name>
+    <description>SEMS (Smart Energy Management System) Backend API</description>
     <url/>
     <licenses>
         <license/>
