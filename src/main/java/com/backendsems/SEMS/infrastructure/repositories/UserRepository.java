@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.infrastructure.repositories;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,23 +10,19 @@ import java.util.Optional;
 
 /**
  * UserRepository
- * Repositorio para el agregado de Usuario
+ * Repositorio para la entidad User
  */
 @Repository
-public interface UserRepository extends JpaRepository<UserAggregate, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
     
-    @Query("SELECT u FROM UserAggregate u WHERE u.email.value = :email")
-    Optional<UserAggregate> findByEmail(@Param("email") String email);
+    Optional<User> findByEmail(String email);
     
-    @Query("SELECT u FROM UserAggregate u WHERE u.email.value = :username")
-    Optional<UserAggregate> findByUsername(@Param("username") String username);
+    Optional<User> findByUsername(String username);
     
-    @Query("SELECT COUNT(u) > 0 FROM UserAggregate u WHERE u.email.value = :email")
-    boolean existsByEmail(@Param("email") String email);
+    boolean existsByEmail(String email);
     
-    @Query("SELECT COUNT(u) > 0 FROM UserAggregate u WHERE u.email.value = :username")
-    boolean existsByUsername(@Param("username") String username);
+    boolean existsByUsername(String username);
     
-    @Query("SELECT u FROM UserAggregate u JOIN FETCH u.devices WHERE u.id = :userId")
-    Optional<UserAggregate> findByIdWithDevices(@Param("userId") Long userId);
+    @Query("SELECT u FROM User u WHERE u.email = :emailOrUsername OR u.username = :emailOrUsername")
+    Optional<User> findByEmailOrUsername(@Param("emailOrUsername") String emailOrUsername);
 }

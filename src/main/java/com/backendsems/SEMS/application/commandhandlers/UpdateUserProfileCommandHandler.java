@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.application.commandhandlers;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.commands.UpdateProfileCommand;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import jakarta.transaction.Transactional;
@@ -21,28 +21,28 @@ public class UpdateUserProfileCommandHandler {
      * Ejecuta la actualización del perfil de usuario.
      *
      * @param command comando con los datos nuevos del perfil
-     * @return el agregado de usuario actualizado
+     * @return el usuario actualizado
      */
     @Transactional
-    public UserAggregate handle(UpdateProfileCommand command) {
-        command.validate();
+    public User handle(UpdateProfileCommand command) {
+        // La validación se hace automáticamente en el constructor del record
 
         // Buscar usuario existente
-        UserAggregate user = userRepository.findById(command.getUserId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Actualizar datos del perfil (Value Object dentro del agregado)
-        user.getProfile().updateProfile(
-                command.getFirstName(),
-                command.getLastName(),
-                command.getPhoneNumber()
-        );
+        // Actualizar datos del perfil
+        user.setFirstName(command.firstName());
+        user.setLastName(command.lastName());
+        user.setPhoneNumber(command.phoneNumber());
 
-        // Si se usa foto de perfil, puedes agregar:
-        // user.setProfilePhotoUrl(command.getProfilePhotoUrl());
+        // Si se usa foto de perfil:
+        if (command.profilePhotoUrl() != null) {
+            user.setProfilePhotoUrl(command.profilePhotoUrl());
+        }
 
         // Guardar cambios
-        UserAggregate updated = userRepository.save(user);
+        User updated = userRepository.save(user);
         return updated;
     }
 }

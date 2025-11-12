@@ -34,7 +34,7 @@ public class MonthlyComparison {
     private User user;
 }
 
-@Entity
+// @Entity  // ENTIDAD SECUNDARIA DESHABILITADA
 @Table(name = "monthly_data")
 @Data
 @Builder

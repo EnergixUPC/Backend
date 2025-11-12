@@ -1,8 +1,8 @@
 package com.backendsems.SEMS.domain.services;
 
 import com.backendsems.SEMS.domain.model.entities.Alert;
-import com.backendsems.SEMS.domain.model.aggregates.NotificationAggregate;
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.Notification;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.infrastructure.repositories.AlertRepository;
 import com.backendsems.SEMS.infrastructure.repositories.NotificationRepository;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
@@ -21,27 +21,27 @@ public class NotificationService {
     private final UserRepository userRepository;
     
     // Notification methods
-    public List<NotificationAggregate> getAllNotificationsByUserId(Long userId) {
+    public List<Notification> getAllNotificationsByUserId(Long userId) {
         return notificationRepository.findByUserIdOrderByTimestampDesc(userId);
     }
     
-    public List<NotificationAggregate> getUnreadNotificationsByUserId(Long userId) {
+    public List<Notification> getUnreadNotificationsByUserId(Long userId) {
         return notificationRepository.findByUserIdAndIsRead(userId, "UNREAD");
     }
     
-    public NotificationAggregate createNotification(Long userId, NotificationAggregate notification) {
-        UserAggregate user = userRepository.findById(userId)
+    public Notification createNotification(Long userId, Notification notification) {
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        notification.setUser(user);
+        notification.setUserId(userId);
         return notificationRepository.save(notification);
     }
     
-    public NotificationAggregate markNotificationAsRead(Long notificationId) {
-        NotificationAggregate notification = notificationRepository.findById(notificationId)
+    public Notification markNotificationAsRead(Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
             .orElseThrow(() -> new RuntimeException("Notification not found"));
         
-        notification.markAsRead();
+        notification.setIsRead("READ");
         return notificationRepository.save(notification);
     }
     
@@ -59,10 +59,10 @@ public class NotificationService {
     }
     
     public Alert createAlert(Long userId, Alert alert) {
-        UserAggregate user = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
         
-        // Note: Alert still uses old entity, need to convert later
+        alert.setUser(user);
         alert.setTimestamp(LocalDateTime.now());
         return alertRepository.save(alert);
     }
@@ -81,7 +81,7 @@ public class NotificationService {
     
     // Utility methods
     public Long getUnreadNotificationCount(Long userId) {
-        return notificationRepository.countByUserIdAndIsRead(userId, "UNREAD");
+        return Long.valueOf(notificationRepository.countUnreadByUserId(userId));
     }
     
     public Long getUnreadAlertCount(Long userId) {

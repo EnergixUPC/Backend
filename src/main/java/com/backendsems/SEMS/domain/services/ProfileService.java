@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.commands.UpdateProfileCommand;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import jakarta.transaction.Transactional;
@@ -21,21 +21,21 @@ public class ProfileService {
      * Actualiza el perfil de un usuario existente.
      */
     @Transactional
-    public UserAggregate updateProfile(UpdateProfileCommand command) {
-        command.validate();
+    public User updateProfile(UpdateProfileCommand command) {
+        // La validación se hace automáticamente en el constructor del record
 
-        UserAggregate user = userRepository.findById(command.getUserId())
+        User user = userRepository.findById(command.userId())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Actualizar campos del perfil (value object)
-        user.getProfile().updateProfile(
-                command.getFirstName(),
-                command.getLastName(),
-                command.getPhoneNumber()
-        );
+        // Actualizar campos del perfil
+        user.setFirstName(command.firstName());
+        user.setLastName(command.lastName());
+        user.setPhoneNumber(command.phoneNumber());
 
-        // Si decides guardar la foto en un campo adicional del agregado, la puedes agregar así:
-        // user.setProfilePhotoUrl(command.getProfilePhotoUrl());
+        // Si decides guardar la foto:
+        if (command.profilePhotoUrl() != null) {
+            user.setProfilePhotoUrl(command.profilePhotoUrl());
+        }
 
         // Persistir cambios
         return userRepository.save(user);
@@ -44,7 +44,7 @@ public class ProfileService {
     /**
      * Obtiene el perfil del usuario.
      */
-    public UserAggregate getProfile(Long userId) {
+    public User getProfile(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }

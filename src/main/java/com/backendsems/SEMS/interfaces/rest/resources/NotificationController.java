@@ -1,6 +1,5 @@
 package com.backendsems.SEMS.interfaces.rest.resources;
 
-import com.backendsems.SEMS.domain.model.aggregates.NotificationAggregate;
 import com.backendsems.SEMS.domain.model.entities.Notification;
 import com.backendsems.SEMS.domain.services.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +8,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -23,10 +21,7 @@ public class NotificationController {
     public ResponseEntity<List<Notification>> getAllNotifications(Authentication authentication) {
         try {
             Long userId = 1L; // TODO: Extraer del JWT
-            List<NotificationAggregate> aggregates = notificationService.getAllNotificationsByUserId(userId);
-            List<Notification> notifications = aggregates.stream()
-                    .map(aggregate -> Notification.fromAggregate(aggregate, null)) // Usar null temporalmente
-                    .collect(Collectors.toList());
+            List<Notification> notifications = notificationService.getAllNotificationsByUserId(userId);
             return ResponseEntity.ok(notifications);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -37,10 +32,7 @@ public class NotificationController {
     public ResponseEntity<List<Notification>> getUnreadNotifications(Authentication authentication) {
         try {
             Long userId = 1L; // TODO: Extraer del JWT
-            List<NotificationAggregate> aggregates = notificationService.getUnreadNotificationsByUserId(userId);
-            List<Notification> notifications = aggregates.stream()
-                    .map(aggregate -> Notification.fromAggregate(aggregate, null)) // Usar null temporalmente
-                    .collect(Collectors.toList());
+            List<Notification> notifications = notificationService.getUnreadNotificationsByUserId(userId);
             return ResponseEntity.ok(notifications);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -53,9 +45,7 @@ public class NotificationController {
             Authentication authentication) {
         try {
             Long userId = 1L; // TODO: Extraer del JWT
-            NotificationAggregate notificationAggregate = notification.toAggregate();
-            NotificationAggregate createdAggregate = notificationService.createNotification(userId, notificationAggregate);
-            Notification createdNotification = Notification.fromAggregate(createdAggregate, null);
+            Notification createdNotification = notificationService.createNotification(userId, notification);
             return ResponseEntity.ok(createdNotification);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -65,8 +55,7 @@ public class NotificationController {
     @PutMapping("/{notificationId}/read")
     public ResponseEntity<Notification> markAsRead(@PathVariable Long notificationId) {
         try {
-            NotificationAggregate aggregate = notificationService.markNotificationAsRead(notificationId);
-            Notification notification = Notification.fromAggregate(aggregate, null);
+            Notification notification = notificationService.markNotificationAsRead(notificationId);
             return ResponseEntity.ok(notification);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();

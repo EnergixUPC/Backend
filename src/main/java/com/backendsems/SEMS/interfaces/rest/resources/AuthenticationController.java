@@ -1,10 +1,12 @@
 package com.backendsems.SEMS.interfaces.rest.resources;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
 import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.valueobjects.LoginCredentials;
 import com.backendsems.SEMS.domain.model.valueobjects.TokenPair;
+import com.backendsems.SEMS.domain.model.valueobjects.Email;
+import com.backendsems.SEMS.domain.model.valueobjects.UserProfile;
 import com.backendsems.SEMS.domain.services.AuthenticationService;
+import com.backendsems.SEMS.interfaces.rest.dto.RegisterUserDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -55,22 +57,67 @@ public class AuthenticationController {
     }
     
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody RegisterUserDto registerDto) {
         try {
-            UserAggregate userAggregate = user.toAggregate();
-            UserAggregate registeredAggregate = authenticationService.register(userAggregate);
-            User registeredUser = User.fromAggregate(registeredAggregate);
-            return ResponseEntity.ok(registeredUser);
+            System.out.println("========================================");
+            System.out.println("REGISTRATION ATTEMPT");
+            System.out.println("Email: " + registerDto.getEmail());
+            System.out.println("Name: " + registerDto.getFirstName() + " " + registerDto.getLastName());
+            System.out.println("========================================");
+
+            // Verificar si el usuario ya existe
+            if (userRepository.findByUsername(registerDto.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("error", "User with this email already exists"));
+            }
+
+            // Crear el User
+            User user = User.builder()
+                    .username(registerDto.getEmail())
+                    .email(registerDto.getEmail())
+                    .password(registerDto.getPassword())
+                    .firstName(registerDto.getFirstName())
+                    .lastName(registerDto.getLastName())
+                    .phoneNumber(registerDto.getPhoneNumber())
+                    .address(registerDto.getAddress())
+                    .role(User.Role.USER)
+                    .build();
+
+            // Registrar el usuario
+            User registeredUser = authenticationService.register(user);
+
+            System.out.println("REGISTRATION SUCCESS!");
+            System.out.println("User ID: " + registeredUser.getId());
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "User registered successfully");
+            response.put("user", Map.of(
+                    "id", registeredUser.getId(),
+                    "email", registeredUser.getEmail(),
+                    "firstName", registeredUser.getFirstName(),
+                    "lastName", registeredUser.getLastName(),
+                    "phoneNumber", registeredUser.getPhoneNumber() != null ? registeredUser.getPhoneNumber() : "",
+                    "address", registeredUser.getAddress() != null ? registeredUser.getAddress() : ""
+            ));
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            System.out.println("========================================");
+            System.out.println("REGISTRATION FAILED!");
+            System.out.println("Error type: " + e.getClass().getName());
+            System.out.println("Error message: " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("========================================");
+
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
         }
     }
     
     @GetMapping("/profile")
     public ResponseEntity<User> getProfile(Authentication authentication) {
         try {
-            UserAggregate userAggregate = authenticationService.getCurrentUser(authentication.getName());
-            User user = User.fromAggregate(userAggregate);
+            User user = authenticationService.getCurrentUser(authentication.getName());
             return ResponseEntity.ok(user);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
@@ -99,10 +146,10 @@ public class AuthenticationController {
             System.out.println("Password received: " + password);
 
             // Buscar el usuario
-            UserAggregate user = userRepository.findByUsername(username)
+            User user = userRepository.findByEmailOrUsername(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            System.out.println("User found: " + user.getEmail().getValue());
+            System.out.println("User found: " + user.getEmail());
             System.out.println("Password in DB: " + user.getPassword());
 
             // Verificar la contraseña

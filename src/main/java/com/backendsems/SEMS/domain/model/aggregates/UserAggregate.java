@@ -1,83 +1,88 @@
 package com.backendsems.SEMS.domain.model.aggregates;
 
+import com.backendsems.SEMS.domain.model.commands.CreateUserCommand;
 import com.backendsems.SEMS.domain.model.valueobjects.Email;
 import com.backendsems.SEMS.domain.model.valueobjects.UserProfile;
-import com.backendsems.SEMS.domain.model.valueobjects.UserId;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import com.backendsems.shared.infrastructure.persistence.jpa.AuditableAbstractAggregateRoot;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.Getter;
 
 /**
  * User Aggregate Root
- * Gestiona todo lo relacionado con un usuario del sistema SEMS
+ * Representa un usuario en el sistema SEMS siguiendo principios DDD
+ * Extiende AuditableAbstractAggregateRoot para capacidades de auditoría
  */
-@Entity
-@Table(name = "users")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class UserAggregate {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+// @Entity  // TEMPORALMENTE DESHABILITADO PARA EVITAR DUPLICACIÓN DE TABLAS
+@Getter
+public class UserAggregate extends AuditableAbstractAggregateRoot<UserAggregate> {
+
     @Embedded
     private Email email;
-    
-    @Embedded 
+
+    @Embedded
     private UserProfile profile;
-    
+
     @Column(nullable = false)
     private String password;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-    
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<DeviceAggregate> devices = new ArrayList<>();
-    
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-    
-    @LastModifiedDate
-    @Column(nullable = false)
-    private LocalDateTime updatedAt;
-    
+
     public enum Role {
         ADMIN, USER
     }
-    
+
+    /**
+     * Constructor por defecto requerido por JPA
+     */
+    public UserAggregate() {
+        super();
+        this.role = Role.USER;
+    }
+
+    public UserAggregate(CreateUserCommand command) {
+        this();
+        this.email = new Email(command.email());
+        this.profile = new UserProfile(command.firstName(), command.lastName());
+        this.password = command.password();
+        this.role = Role.USER;
+    }
+
+    public UserAggregate(String email, String firstName, String lastName, String password) {
+        this();
+        this.email = new Email(email);
+        this.profile = new UserProfile(firstName, lastName);
+        this.password = password;
+        this.role = Role.USER;
+    }
+
     // Domain Methods
-    public void addDevice(DeviceAggregate device) {
-        device.setUser(this);
-        this.devices.add(device);
+    public boolean canManageDevice(Long deviceId) {
+        return this.role == Role.ADMIN;
     }
-    
-    public void removeDevice(DeviceAggregate device) {
-        this.devices.remove(device);
-        device.setUser(null);
+
+    public void updateProfile(String firstName, String lastName) {
+        this.profile = new UserProfile(firstName, lastName);
     }
-    
-    public boolean canManageDevice(DeviceAggregate device) {
-        return this.devices.contains(device);
+
+    public void promoteToAdmin() {
+        this.role = Role.ADMIN;
     }
-    
-    public UserId getUserId() {
-        return new UserId(this.id);
+
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
+    }
+
+    public String getEmailAddress() {
+        return this.email != null ? this.email.getValue() : null;
+    }
+
+    public String getFullName() {
+        return this.profile != null ? this.profile.getFullName() : null;
     }
 }

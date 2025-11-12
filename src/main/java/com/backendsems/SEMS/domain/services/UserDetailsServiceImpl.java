@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,16 +21,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserAggregate user = userRepository.findByUsername(username)
+        User user = userRepository.findByEmailOrUsername(username)
             .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
         
         return new UserPrincipal(user);
     }
     
     public static class UserPrincipal implements UserDetails {
-        private final UserAggregate user;
+        private final User user;
         
-        public UserPrincipal(UserAggregate user) {
+        public UserPrincipal(User user) {
             this.user = user;
         }
         
@@ -46,7 +46,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         
         @Override
         public String getUsername() {
-            return user.getEmail().getValue();
+            return user.getEmail();
         }
         
         @Override
@@ -69,7 +69,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             return true;
         }
         
-        public UserAggregate getUser() {
+        public User getUser() {
             return user;
         }
     }

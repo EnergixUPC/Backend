@@ -1,10 +1,8 @@
 package com.backendsems.SEMS.application.commandhandlers;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.commands.CreateUserCommand;
 import com.backendsems.SEMS.domain.model.events.UserCreatedEvent;
-import com.backendsems.SEMS.domain.model.valueobjects.Email;
-import com.backendsems.SEMS.domain.model.valueobjects.UserProfile;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -25,30 +23,33 @@ public class CreateUserCommandHandler {
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     
-    public UserAggregate handle(CreateUserCommand command) {
-        command.validate();
+    public User handle(CreateUserCommand command) {
+        // La validación se hace automáticamente en el constructor del record
         
         // Verificar que el email no exista
-        if (userRepository.existsByEmail(command.getEmail())) {
+        if (userRepository.existsByEmail(command.email())) {
             throw new IllegalArgumentException("El email ya está registrado");
         }
         
-        // Crear el agregado de usuario
-        UserAggregate user = UserAggregate.builder()
-                .email(new Email(command.getEmail()))
-                .profile(new UserProfile(command.getFirstName(), command.getLastName(), command.getPhone()))
-                .password(passwordEncoder.encode(command.getPassword()))
-                .role(UserAggregate.Role.valueOf(command.getRole() != null ? command.getRole() : "USER"))
+        // Crear el usuario
+        User user = User.builder()
+                .email(command.email())
+                .username(command.email())
+                .firstName(command.firstName())
+                .lastName(command.lastName())
+                .phoneNumber(null) // No disponible en el command
+                .password(passwordEncoder.encode(command.password()))
+                .role(User.Role.USER) // Valor por defecto
                 .build();
         
         // Guardar en base de datos
-        UserAggregate savedUser = userRepository.save(user);
+        User savedUser = userRepository.save(user);
         
         // Publicar evento de dominio
         UserCreatedEvent event = UserCreatedEvent.create(
                 savedUser.getId(),
-                savedUser.getEmail().getValue(),
-                savedUser.getProfile().getFullName()
+                savedUser.getEmail(),
+                savedUser.getFullName()
         );
         eventPublisher.publishEvent(event);
         

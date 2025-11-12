@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -26,12 +26,12 @@ public class TokenService {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
     
-    public String generateToken(UserAggregate user) {
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("role", user.getRole().name());
-        claims.put("email", user.getEmail().getValue());
-        return createToken(claims, user.getEmail().getValue());
+        claims.put("email", user.getEmail());
+        return createToken(claims, user.getEmail());
     }
     
     private String createToken(Map<String, Object> claims, String subject) {

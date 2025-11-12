@@ -1,28 +1,22 @@
 package com.backendsems.SEMS.domain.model.entities;
 
-import com.backendsems.SEMS.domain.model.aggregates.DeviceAggregate;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 /**
- * Device Entity - Compatibility layer
- * Mantiene compatibilidad con el frontend mientras usa DeviceAggregate internamente
+ * Device Entity - Entidad JPA para persistencia
  */
 @Entity
-@Table(name = "devices_legacy")
+@Table(name = "device")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
 public class Device {
     
     @Id
@@ -41,35 +35,39 @@ public class Device {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DeviceStatus status;
+    @Builder.Default
+    private DeviceStatus status = DeviceStatus.OFF;
     
     @Column(name = "real_time_status")
-    private String realTimeStatus;
+    @Builder.Default
+    private String realTimeStatus = "Off";
     
     @Column(name = "last_active")
-    private String lastActive;
+    @Builder.Default
+    private String lastActive = "Never";
     
     @Column(name = "alert_history", length = 500)
-    private String alertHistory;
+    @Builder.Default
+    private String alertHistory = "No alerts";
     
     @Column(name = "energy_consumption", length = 100)
-    private String energyConsumption;
+    @Builder.Default
+    private String energyConsumption = "0 kWh this week";
     
     @Column(nullable = false)
     private String location;
     
     @Builder.Default
     @Column(name = "is_active")
-    private Boolean isActive = true;
+    private Boolean isActive = false;
     
-    // Campos adicionales del frontend SEMS
     @Builder.Default
     @Column(name = "consumption_kwh")
     private Double consumptionKwh = 0.0;
     
     @Builder.Default
     @Column(name = "efficiency_rating") 
-    private Integer efficiencyRating = 85; // Porcentaje
+    private Integer efficiencyRating = 85;
     
     @Column(name = "brand")
     private String brand;
@@ -81,93 +79,89 @@ public class Device {
     @Column(name = "installation_date")
     private LocalDateTime installationDate = LocalDateTime.now();
     
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-    
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
     
     public enum DeviceType {
-        AIR_CONDITIONER,
-        REFRIGERATOR,
-        TV,
-        MICROWAVE,
-        LAPTOP,
-        SMART_SPEAKER,
-        WASHING_MACHINE,
-        DISHWASHER,
-        LIGHTING,
-        HEATING,
-        SMART_METER,
-        SOLAR_PANEL,
-        BATTERY,
-        HVAC,
-        OTHER
+        AIR_CONDITIONER("Air Conditioner"),
+        REFRIGERATOR("Refrigerator"),
+        TV("TV"),
+        MICROWAVE("Microwave"),
+        LAPTOP("Laptop"),
+        SMART_SPEAKER("Smart Speaker"),
+        WASHING_MACHINE("Washing Machine"),
+        DISHWASHER("Dishwasher"),
+        LIGHTING("Lighting"),
+        HEATING("Heating"),
+        SMART_METER("Smart Meter"),
+        SOLAR_PANEL("Solar Panel"),
+        BATTERY("Battery"),
+        HVAC("HVAC"),
+        OTHER("Other");
+        
+        private final String displayName;
+        
+        DeviceType(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
+        
+        public static DeviceType fromString(String type) {
+            for (DeviceType deviceType : DeviceType.values()) {
+                if (deviceType.name().equalsIgnoreCase(type) || 
+                    deviceType.getDisplayName().equalsIgnoreCase(type)) {
+                    return deviceType;
+                }
+            }
+            return OTHER;
+        }
     }
     
     public enum DeviceStatus {
-        ON,
-        OFF,
-        STANDBY,
-        CHARGING,
-        ERROR,
-        MAINTENANCE
-    }
-    
-    // Conversion methods to/from DeviceAggregate
-    public static Device fromAggregate(DeviceAggregate aggregate, User user) {
-        return Device.builder()
-                .id(aggregate.getId())
-                .name(aggregate.getName())
-                .category(getCategoryFromType(aggregate.getType()))
-                .type(DeviceType.valueOf(aggregate.getType().name()))
-                .status(aggregate.getStatus().isActive() ? DeviceStatus.ON : DeviceStatus.OFF)
-                .realTimeStatus(aggregate.getStatus().isActive() ? "On" : "Off")
-                .lastActive(aggregate.getStatus().isActive() ? "Now" : "Offline")
-                .energyConsumption(aggregate.getCurrentConsumption().toString())
-                .consumptionKwh(aggregate.getCurrentConsumption().getValue())
-                .isActive(aggregate.getStatus().isActive())
-                .user(user)
-                .build();
-    }
-    
-    private static String getCategoryFromType(DeviceAggregate.DeviceType type) {
-        return switch (type) {
-            case HVAC -> "Heating & Cooling";
-            case APPLIANCE -> "Major Appliances";
-            case LIGHTING -> "Lighting";
-            case SMART_METER -> "Monitoring";
-            case SOLAR_PANEL, BATTERY -> "Energy Storage";
-            default -> "Electronics";
-        };
-    }
-    
-    public DeviceAggregate toAggregate() {
-        DeviceAggregate.DeviceType aggregateType = getTypeFromCategory(this.category);
+        ON("On"),
+        OFF("Off"),
+        STANDBY("Standby"),
+        CHARGING("Charging"),
+        ERROR("Error"),
+        MAINTENANCE("Maintenance");
         
-        return DeviceAggregate.builder()
-                .id(this.id)
-                .name(this.name)
-                .type(aggregateType)
-                .status(new com.backendsems.SEMS.domain.model.valueobjects.DeviceStatus(this.status == DeviceStatus.ON))
-                .currentConsumption(new com.backendsems.SEMS.domain.model.valueobjects.EnergyConsumption(this.consumptionKwh))
-                .build();
+        private final String displayName;
+        
+        DeviceStatus(String displayName) {
+            this.displayName = displayName;
+        }
+        
+        public String getDisplayName() {
+            return displayName;
+        }
     }
     
-    private static DeviceAggregate.DeviceType getTypeFromCategory(String category) {
-        return switch (category) {
-            case "Heating & Cooling" -> DeviceAggregate.DeviceType.HVAC;
-            case "Major Appliances" -> DeviceAggregate.DeviceType.APPLIANCE;
-            case "Lighting" -> DeviceAggregate.DeviceType.LIGHTING;
-            case "Monitoring" -> DeviceAggregate.DeviceType.SMART_METER;
-            case "Energy Storage" -> DeviceAggregate.DeviceType.SOLAR_PANEL;
-            default -> DeviceAggregate.DeviceType.APPLIANCE;
+    // Métodos de utilidad
+    public void turnOn() {
+        this.status = DeviceStatus.ON;
+        this.isActive = true;
+        this.realTimeStatus = "On";
+        this.lastActive = "Now";
+    }
+    
+    public void turnOff() {
+        this.status = DeviceStatus.OFF;
+        this.isActive = false;
+        this.realTimeStatus = "Off";
+        this.lastActive = "Just now";
+    }
+    
+    public String getCategoryFromType() {
+        return switch (this.type) {
+            case AIR_CONDITIONER, HEATING, HVAC -> "Calefacción y Refrigeración";
+            case REFRIGERATOR, WASHING_MACHINE, DISHWASHER, MICROWAVE -> "Electrodomésticos Principales";
+            case TV, LAPTOP, SMART_SPEAKER -> "Electrónicos";
+            case LIGHTING -> "Iluminación";
+            case SMART_METER, SOLAR_PANEL, BATTERY -> "Otros";
+            default -> "Otros";
         };
     }
 }

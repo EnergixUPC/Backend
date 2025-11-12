@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.interfaces.rest.resources;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.commands.UpdateProfileCommand;
 import com.backendsems.SEMS.domain.services.ProfileService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +24,8 @@ public class ProfileController {
      * Obtiene el perfil del usuario.
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<UserAggregate> getProfile(@PathVariable Long userId) {
-        UserAggregate profile = profileService.getProfile(userId);
+    public ResponseEntity<User> getProfile(@PathVariable Long userId) {
+        User profile = profileService.getProfile(userId);
         return ResponseEntity.ok(profile);
     }
 
@@ -33,12 +33,20 @@ public class ProfileController {
      * Actualiza el perfil del usuario.
      */
     @PutMapping("/{userId}")
-    public ResponseEntity<UserAggregate> updateProfile(
+    public ResponseEntity<User> updateProfile(
             @PathVariable Long userId,
             @RequestBody UpdateProfileCommand command
     ) {
-        command.setUserId(userId);
-        UserAggregate updatedUser = profileService.updateProfile(command);
+        // Crear nuevo command con el userId del path parameter
+        UpdateProfileCommand commandWithUserId = new UpdateProfileCommand(
+                userId,
+                command.firstName(),
+                command.lastName(),
+                command.address(),
+                command.phoneNumber(),
+                command.profilePhotoUrl()
+        );
+        User updatedUser = profileService.updateProfile(commandWithUserId);
         return ResponseEntity.ok(updatedUser);
     }
 

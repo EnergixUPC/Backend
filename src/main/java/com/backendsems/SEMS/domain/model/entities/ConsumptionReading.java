@@ -1,6 +1,5 @@
 package com.backendsems.SEMS.domain.model.entities;
 
-import com.backendsems.SEMS.domain.model.aggregates.DeviceAggregate;
 import com.backendsems.SEMS.domain.model.valueobjects.EnergyConsumption;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -37,7 +36,7 @@ public class ConsumptionReading {
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device_id", nullable = false)
-    private DeviceAggregate device;
+    private Device device;
     
     @CreatedDate
     @Column(nullable = false, updatable = false)

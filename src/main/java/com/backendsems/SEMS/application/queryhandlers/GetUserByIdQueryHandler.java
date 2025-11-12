@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.application.queryhandlers;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.queries.GetUserByIdQuery;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +20,7 @@ public class GetUserByIdQueryHandler {
     
     private final UserRepository userRepository;
     
-    public Optional<UserAggregate> handle(GetUserByIdQuery query) {
+    public Optional<User> handle(GetUserByIdQuery query) {
         query.validate();
         return userRepository.findById(query.getUserId());
     }

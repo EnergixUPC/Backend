@@ -1,7 +1,7 @@
 package com.backendsems.SEMS.interfaces.rest.resources;
 
 import com.backendsems.SEMS.domain.model.entities.*;
-import com.backendsems.SEMS.domain.model.aggregates.*;
+import com.backendsems.SEMS.interfaces.rest.dto.CreateDeviceDto;
 import com.backendsems.SEMS.domain.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -121,35 +121,45 @@ public class DataController {
         };
         
         for (Device device : devices) {
-            deviceService.createDevice(userId, device);
+            CreateDeviceDto createDto = CreateDeviceDto.builder()
+                .name(device.getName())
+                .type(device.getType().name())  // Convertir enum a String
+                .category(device.getCategory())
+                .location(device.getLocation())
+                .status(device.getStatus().name())  // Convertir enum a String
+                .build();
+            deviceService.createDevice(userId, createDto);
         }
     }
     
     private void createSampleNotifications(Long userId) {
-        NotificationAggregate[] notifications = {
-            NotificationAggregate.builder()
+        Notification[] notifications = {
+            Notification.builder()
                 .title("Energy savings achieved")
                 .message("You saved 15% energy this month compared to last month.")
-                .type(NotificationAggregate.NotificationType.ENERGY_SAVING_TIP)
-                .status(NotificationAggregate.NotificationStatus.READ)
+                .type(Notification.NotificationType.ENERGY_SAVING)
+                .isRead("READ")
+                .userId(userId)
                 .build(),
             
-            NotificationAggregate.builder()
+            Notification.builder()
                 .title("Device maintenance")
                 .message("Smart Fan in Master Bedroom needs maintenance.")
-                .type(NotificationAggregate.NotificationType.SYSTEM_ALERT)
-                .status(NotificationAggregate.NotificationStatus.READ)
+                .type(Notification.NotificationType.SYSTEM_UPDATE)
+                .isRead("READ")
+                .userId(userId)
                 .build(),
             
-            NotificationAggregate.builder()
+            Notification.builder()
                 .title("System update completed")
                 .message("Your SEMS dashboard was updated successfully.")
-                .type(NotificationAggregate.NotificationType.SYSTEM_ALERT)
-                .status(NotificationAggregate.NotificationStatus.READ)
+                .type(Notification.NotificationType.SYSTEM_UPDATE)
+                .isRead("READ")
+                .userId(userId)
                 .build()
         };
         
-        for (NotificationAggregate notification : notifications) {
+        for (Notification notification : notifications) {
             notificationService.createNotification(userId, notification);
         }
     }

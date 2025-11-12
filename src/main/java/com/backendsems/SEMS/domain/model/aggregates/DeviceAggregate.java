@@ -1,99 +1,117 @@
 package com.backendsems.SEMS.domain.model.aggregates;
 
-import com.backendsems.SEMS.domain.model.entities.ConsumptionReading;
-import com.backendsems.SEMS.domain.model.valueobjects.DeviceId;
-import com.backendsems.SEMS.domain.model.valueobjects.EnergyConsumption;
+import com.backendsems.SEMS.domain.model.commands.CreateDeviceCommand;
 import com.backendsems.SEMS.domain.model.valueobjects.DeviceStatus;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import com.backendsems.SEMS.domain.model.valueobjects.EnergyConsumption;
+import com.backendsems.shared.infrastructure.persistence.jpa.AuditableAbstractAggregateRoot;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import lombok.Getter;
 
 /**
  * Device Aggregate Root
- * Gestiona dispositivos de energía y sus lecturas
+ * Representa un dispositivo en el sistema SEMS siguiendo principios DDD
+ * Extiende AuditableAbstractAggregateRoot para capacidades de auditoría
  */
-@Entity
-@Table(name = "devices")
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
-public class DeviceAggregate {
-    
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
+// @Entity  // TEMPORALMENTE DESHABILITADO PARA EVITAR DUPLICACIÓN DE TABLAS
+@Getter
+public class DeviceAggregate extends AuditableAbstractAggregateRoot<DeviceAggregate> {
+
     @Column(nullable = false)
-    private String name;
-    
+    private String deviceName;
+
+    @Column(nullable = false)
+    private String location;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private DeviceType type;
-    
+    private DeviceType deviceType;
+
     @Embedded
     private DeviceStatus status;
-    
+
     @Embedded
-    private EnergyConsumption currentConsumption;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private UserAggregate user;
-    
-    @OneToMany(mappedBy = "device", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<ConsumptionReading> consumptionReadings = new ArrayList<>();
-    
-    @CreatedDate
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-    
-    @LastModifiedDate
+    private EnergyConsumption powerConsumption;
+
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
-    
+    private Long userId;
+
     public enum DeviceType {
-        SMART_METER, SOLAR_PANEL, BATTERY, APPLIANCE, HVAC, LIGHTING
+        AIR_CONDITIONER, REFRIGERATOR, WASHING_MACHINE, TELEVISION, COMPUTER, LIGHT, OTHER
     }
-    
+
+    /**
+     * Constructor por defecto requerido por JPA
+     */
+    public DeviceAggregate() {
+        super();
+        this.status = new DeviceStatus(false);
+        this.powerConsumption = new EnergyConsumption(0.0);
+    }
+
+    public DeviceAggregate(CreateDeviceCommand command) {
+        this();
+        this.deviceName = command.name();
+        this.location = ""; // Default location
+        this.deviceType = command.type();
+        this.userId = command.userId();
+        this.status = new DeviceStatus(false);
+        this.powerConsumption = new EnergyConsumption(0.0);
+    }
+
+    public DeviceAggregate(String deviceName, String location, DeviceType deviceType, Long userId) {
+        this();
+        this.deviceName = deviceName;
+        this.location = location;
+        this.deviceType = deviceType;
+        this.userId = userId;
+        this.status = new DeviceStatus(false);
+        this.powerConsumption = new EnergyConsumption(0.0);
+    }
+
     // Domain Methods
-    public void turnOn() {
+    public void activate() {
         this.status = new DeviceStatus(true);
     }
-    
-    public void turnOff() {
+
+    public void deactivate() {
         this.status = new DeviceStatus(false);
     }
-    
-    public void addConsumptionReading(ConsumptionReading reading) {
-        reading.setDevice(this);
-        this.consumptionReadings.add(reading);
-        // Actualizar consumo actual
-        this.currentConsumption = reading.getConsumption();
+
+    public void updatePowerConsumption(Double consumption) {
+        if (consumption >= 0) {
+            this.powerConsumption = new EnergyConsumption(consumption);
+        }
     }
-    
+
+    public void updateLocation(String newLocation) {
+        this.location = newLocation;
+    }
+
     public boolean isActive() {
-        return status != null && status.isActive();
+        return this.status != null && this.status.isActive();
     }
-    
-    public DeviceId getDeviceId() {
-        return new DeviceId(this.id);
+
+    public boolean isConsumingPower() {
+        return this.isActive() && this.powerConsumption.getValue() > 0;
     }
-    
-    public Double getTotalConsumption() {
-        return consumptionReadings.stream()
-                .mapToDouble(reading -> reading.getConsumption().getValue())
-                .sum();
+
+    public boolean belongsToUser(Long userId) {
+        return this.userId.equals(userId);
+    }
+
+    public String getDeviceNameValue() {
+        return this.deviceName;
+    }
+
+    public String getLocationValue() {
+        return this.location;
+    }
+
+    public Double getCurrentConsumption() {
+        return this.powerConsumption != null ? this.powerConsumption.getValue() : 0.0;
     }
 }
