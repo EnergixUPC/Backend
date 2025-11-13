@@ -4,9 +4,10 @@ import com.backendsems.SEMS.domain.model.entities.WeeklyConsumption;
 import com.backendsems.SEMS.domain.services.ReportsService;
 import com.backendsems.SEMS.interfaces.rest.dto.ReportsDTO;
 import com.backendsems.SEMS.interfaces.rest.mapper.ReportsMapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,11 +29,12 @@ public class ReportsController {
      * Endpoint principal para la gráfica Weekly Consumption Trend
      * Retorna datos en el formato exacto del db.json original
      */
+    @Operation(summary = "Obtener consumo semanal", description = "Obtiene los datos de consumo semanal para la gráfica")
     @GetMapping("/weeklyConsumption")
-    public ResponseEntity<ReportsDTO.WeeklyConsumptionResponseDTO> getWeeklyConsumption(Authentication authentication) {
+    public ResponseEntity<ReportsDTO.WeeklyConsumptionResponseDTO> getWeeklyConsumption(
+            @Parameter(description = "ID del usuario", example = "1") 
+            @RequestParam(value = "userId", defaultValue = "1") Long userId) {
         try {
-            Long userId = 1L; // TODO: Extraer del JWT
-            
             // Obtener la semana más reciente
             List<WeeklyConsumption> weeklyConsumptions = reportsService.getRecentWeeklyConsumption(userId, 1);
             
@@ -58,11 +60,14 @@ public class ReportsController {
      * Generar datos de ejemplo para testing
      * Retorna la misma estructura que el GET principal
      */
+    @Operation(summary = "Generar datos de ejemplo", description = "Genera datos de muestra de consumo semanal para testing")
     @PostMapping("/weeklyConsumption/generate-sample")
-    public ResponseEntity<ReportsDTO.WeeklyConsumptionResponseDTO> generateSampleData(Authentication authentication) {
+    public ResponseEntity<ReportsDTO.WeeklyConsumptionResponseDTO> generateSampleData(
+            @RequestBody ReportsDTO.GenerateSampleDataRequestDTO request) {
         try {
-            System.out.println("DEBUG: Iniciando generateSampleData");
-            Long userId = 1L; // TODO: Extraer del JWT
+            // Usar ID 1 por defecto para generar datos de ejemplo
+            Long userId = 1L;
+            System.out.println("DEBUG: Iniciando generateSampleData para userId: " + userId);
             
             // Generar datos de ejemplo
             System.out.println("DEBUG: Llamando a generateSampleWeeklyData");
@@ -76,8 +81,15 @@ public class ReportsController {
             
             if (!weeklyConsumptions.isEmpty()) {
                 WeeklyConsumption weeklyConsumption = weeklyConsumptions.get(0);
+                System.out.println("DEBUG: WeeklyConsumption obtenido - ID: " + weeklyConsumption.getId() + 
+                                 ", Week: " + weeklyConsumption.getWeek() + 
+                                 ", DataPoints size: " + (weeklyConsumption.getDataPoints() != null ? weeklyConsumption.getDataPoints().size() : "null"));
+                
                 ReportsDTO.WeeklyConsumptionResponseDTO response = reportsMapper.toWeeklyConsumptionResponseDTO(weeklyConsumption);
-                System.out.println("DEBUG: Respuesta generada exitosamente");
+                System.out.println("DEBUG: Response DTO generado - ID: " + response.getId() + 
+                                 ", Week: " + response.getWeek() + 
+                                 ", DataPoints size: " + (response.getDataPoints() != null ? response.getDataPoints().size() : "null"));
+                
                 return ResponseEntity.ok(response);
             }
             
