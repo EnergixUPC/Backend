@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.domain.model.valueobjects;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,13 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LoginCredentials {
-    @JsonProperty("username") // Acepta "username" del JSON
+    @JsonAlias({"email", "username"}) // Acepta tanto "email" como "username" en el JSON
     private String username;
     private String password;
-    
-    // También acepta "email" como alternativa
-    @JsonProperty("email")
-    public void setEmail(String email) {
-        this.username = email;
-    }
 }
