@@ -1,7 +1,6 @@
 package com.backendsems.SEMS.infrastructure.repositories;
 
-import com.backendsems.SEMS.domain.model.aggregates.DeviceAggregate;
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.Device;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,28 +10,25 @@ import java.util.List;
 
 /**
  * DeviceRepository
- * Repositorio para el agregado de Dispositivo
+ * Repositorio para la entidad Device
  */
 @Repository
-public interface DeviceRepository extends JpaRepository<DeviceAggregate, Long> {
+public interface DeviceRepository extends JpaRepository<Device, Long> {
     
-    List<DeviceAggregate> findByUser(UserAggregate user);
+    List<Device> findByUserId(Long userId);
     
-    @Query("SELECT d FROM DeviceAggregate d WHERE d.user.id = :userId")
-    List<DeviceAggregate> findByUserId(@Param("userId") Long userId);
+    @Query("SELECT d FROM Device d WHERE d.isActive = true AND d.userId = :userId")
+    List<Device> findByUserIdAndIsActive(@Param("userId") Long userId);
     
-    @Query("SELECT d FROM DeviceAggregate d WHERE d.status.active = true AND d.user.id = :userId")
-    List<DeviceAggregate> findByUserIdAndIsActive(@Param("userId") Long userId);
-    
-    @Query("SELECT COUNT(d) FROM DeviceAggregate d WHERE d.user.id = :userId AND d.status.active = true")
+    @Query("SELECT COUNT(d) FROM Device d WHERE d.userId = :userId AND d.isActive = true")
     Integer countActiveDevicesByUserId(@Param("userId") Long userId);
     
-    @Query("SELECT d FROM DeviceAggregate d WHERE d.user.id = :userId AND d.type = :type")
-    List<DeviceAggregate> findByUserIdAndType(@Param("userId") Long userId, @Param("type") DeviceAggregate.DeviceType type);
+    @Query("SELECT d FROM Device d WHERE d.userId = :userId AND d.type = :type")
+    List<Device> findByUserIdAndType(@Param("userId") Long userId, @Param("type") Device.DeviceType type);
     
-    @Query("SELECT d FROM DeviceAggregate d WHERE d.status.active = true")
-    List<DeviceAggregate> findActiveDevices();
+    @Query("SELECT d FROM Device d WHERE d.isActive = true")
+    List<Device> findActiveDevices();
     
-    @Query("SELECT d FROM DeviceAggregate d JOIN FETCH d.consumptionReadings WHERE d.id = :deviceId")
-    DeviceAggregate findByIdWithConsumptionReadings(@Param("deviceId") Long deviceId);
+    @Query("SELECT d FROM Device d WHERE d.userId = :userId AND d.category = :category")
+    List<Device> findByUserIdAndCategory(@Param("userId") Long userId, @Param("category") String category);
 }

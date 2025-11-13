@@ -1,30 +1,22 @@
 package com.backendsems.SEMS.domain.model.entities;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
-import com.backendsems.SEMS.domain.model.valueobjects.Email;
-import com.backendsems.SEMS.domain.model.valueobjects.UserProfile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 /**
- * User Entity - Compatibility layer
- * Mantiene compatibilidad con el frontend mientras usa UserAggregate internamente
+ * User Entity - Entidad JPA para persistencia de usuarios
  */
 @Entity
-@Table(name = "users_legacy")
+@Table(name = "user")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
 public class User {
     
     @Id
@@ -48,7 +40,8 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    @Builder.Default
+    private Role role = Role.USER;
     
     @Column(length = 500)
     private String address;
@@ -59,11 +52,10 @@ public class User {
     @Column(name = "profile_photo_url", length = 1000)
     private String profilePhotoUrl;
     
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    // Timestamps manuales
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
     
-    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
@@ -88,33 +80,18 @@ public class User {
         ADMIN, USER
     }
     
-    // Conversion methods to/from UserAggregate
-    public static User fromAggregate(UserAggregate aggregate) {
-        return User.builder()
-                .id(aggregate.getId())
-                .username(aggregate.getEmail().getValue())
-                .email(aggregate.getEmail().getValue())
-                .password(aggregate.getPassword())
-                .firstName(aggregate.getProfile().getFirstName())
-                .lastName(aggregate.getProfile().getLastName())
-                .phoneNumber(aggregate.getProfile().getPhone())
-                .role(Role.valueOf(aggregate.getRole().name()))
-                .build();
-    }
-    
-    public UserAggregate toAggregate() {
-        UserAggregate.Role userRole = UserAggregate.Role.valueOf(this.role.name());
-        
-        return UserAggregate.builder()
-                .id(this.id)
-                .email(new Email(this.email))
-                .password(this.password)
-                .profile(new UserProfile(this.firstName, this.lastName, this.phoneNumber))
-                .role(userRole)
-                .build();
-    }
-    
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

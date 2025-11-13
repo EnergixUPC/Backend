@@ -1,27 +1,19 @@
 package com.backendsems.SEMS.domain.model.commands;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
 /**
- * RecordConsumptionCommand
- * Comando para registrar una lectura de consumo
+ * Command para registrar una lectura de consumo
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RecordConsumptionCommand {
-    
-    private Long deviceId;
-    private Double consumptionValue;
-    private LocalDateTime readingTime;
-    
-    public void validate() {
+public record RecordConsumptionCommand(
+        Long deviceId,
+        Double consumptionValue,
+        LocalDateTime readingTime
+) {
+    /**
+     * Constructor que incluye validaciones
+     */
+    public RecordConsumptionCommand {
         if (deviceId == null || deviceId <= 0) {
             throw new IllegalArgumentException("ID de dispositivo válido es requerido");
         }
@@ -30,6 +22,7 @@ public class RecordConsumptionCommand {
             throw new IllegalArgumentException("Valor de consumo debe ser mayor o igual a 0");
         }
         
+        // Si readingTime es null, usar el tiempo actual
         if (readingTime == null) {
             readingTime = LocalDateTime.now();
         }

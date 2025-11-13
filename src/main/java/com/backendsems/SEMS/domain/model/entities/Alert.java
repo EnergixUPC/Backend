@@ -5,18 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "alerts")
+@Table(name = "alert")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
 public class Alert {
     
     @Id
@@ -36,7 +33,6 @@ public class Alert {
     @Column(length = 50)
     private String icon;
     
-    @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime timestamp;
     
@@ -50,5 +46,12 @@ public class Alert {
     
     public enum AlertType {
         WARNING, INFO, ERROR, SUCCESS
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = LocalDateTime.now();
+        }
     }
 }

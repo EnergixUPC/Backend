@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.valueobjects.LoginCredentials;
 import com.backendsems.SEMS.domain.model.valueobjects.TokenPair;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
@@ -20,6 +20,8 @@ public class AuthenticationService {
     private final TokenService tokenService;
     
     public TokenPair authenticate(LoginCredentials credentials) {
+        System.out.println("Authenticating user: " + credentials.getUsername());
+        
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(
                 credentials.getUsername(),
@@ -27,27 +29,34 @@ public class AuthenticationService {
             )
         );
         
-        UserAggregate user = userRepository.findByUsername(credentials.getUsername())
+        User user = userRepository.findByEmailOrUsername(credentials.getUsername())
             .orElseThrow(() -> new RuntimeException("User not found"));
         
         String token = tokenService.generateToken(user);
         return new TokenPair(token);
     }
     
-    public UserAggregate register(UserAggregate user) {
-        if (userRepository.existsByUsername(user.getEmail().getValue())) {
+    public User register(User user) {
+        System.out.println("Registering user: " + user.getEmail());
+        
+        if (userRepository.existsByUsername(user.getEmail())) {
             throw new RuntimeException("Username already exists");
         }
-        if (userRepository.existsByEmail(user.getEmail().getValue())) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Email already exists");
+        }
+        
+        // Establecer username igual a email si no se proporciona
+        if (user.getUsername() == null) {
+            user.setUsername(user.getEmail());
         }
         
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
     
-    public UserAggregate getCurrentUser(String username) {
-        return userRepository.findByUsername(username)
+    public User getCurrentUser(String username) {
+        return userRepository.findByEmailOrUsername(username)
             .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

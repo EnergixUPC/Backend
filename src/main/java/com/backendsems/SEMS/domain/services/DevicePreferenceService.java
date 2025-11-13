@@ -1,6 +1,5 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
 import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.infrastructure.repositories.DevicePreferenceRepository;
@@ -23,9 +22,8 @@ public class DevicePreferenceService {
     }
     
     public DevicePreference updateDevicePreferences(Long userId, DevicePreference preferences) {
-        UserAggregate userAggregate = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        User user = User.fromAggregate(userAggregate);
         
         DevicePreference existingPreferences = devicePreferenceRepository.findByUserId(userId)
             .orElse(new DevicePreference());
@@ -49,9 +47,8 @@ public class DevicePreferenceService {
     }
     
     private DevicePreference createDefaultPreferences(Long userId) {
-        UserAggregate userAggregate = userRepository.findById(userId)
+        User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        User user = User.fromAggregate(userAggregate);
         
         DevicePreference defaultPreferences = DevicePreference.builder()
             .user(user)

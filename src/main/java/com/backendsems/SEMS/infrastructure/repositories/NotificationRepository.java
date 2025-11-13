@@ -1,7 +1,6 @@
 package com.backendsems.SEMS.infrastructure.repositories;
 
-import com.backendsems.SEMS.domain.model.aggregates.NotificationAggregate;
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
+import com.backendsems.SEMS.domain.model.entities.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,28 +10,17 @@ import java.util.List;
 
 /**
  * NotificationRepository
- * Repositorio para el agregado de Notificación
+ * Repositorio para la entidad Notification
  */
 @Repository
-public interface NotificationRepository extends JpaRepository<NotificationAggregate, Long> {
+public interface NotificationRepository extends JpaRepository<Notification, Long> {
     
-    List<NotificationAggregate> findByUser(UserAggregate user);
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId ORDER BY n.timestamp DESC")
+    List<Notification> findByUserIdOrderByTimestampDesc(@Param("userId") Long userId);
     
-    @Query("SELECT n FROM NotificationAggregate n WHERE n.user.id = :userId ORDER BY n.createdAt DESC")
-    List<NotificationAggregate> findByUserIdOrderByCreatedAtDesc(@Param("userId") Long userId);
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId AND n.isRead = :isRead")
+    List<Notification> findByUserIdAndIsRead(@Param("userId") Long userId, @Param("isRead") String isRead);
     
-    @Query("SELECT n FROM NotificationAggregate n WHERE n.user.id = :userId ORDER BY n.createdAt DESC")
-    List<NotificationAggregate> findByUserIdOrderByTimestampDesc(@Param("userId") Long userId);
-    
-    @Query("SELECT n FROM NotificationAggregate n WHERE n.user.id = :userId AND n.status = 'UNREAD'")
-    List<NotificationAggregate> findUnreadByUserId(@Param("userId") Long userId);
-    
-    @Query("SELECT n FROM NotificationAggregate n WHERE n.user.id = :userId AND n.status = :status")
-    List<NotificationAggregate> findByUserIdAndIsRead(@Param("userId") Long userId, @Param("status") String status);
-    
-    @Query("SELECT COUNT(n) FROM NotificationAggregate n WHERE n.user.id = :userId AND n.status = 'UNREAD'")
-    Long countUnreadByUserId(@Param("userId") Long userId);
-    
-    @Query("SELECT COUNT(n) FROM NotificationAggregate n WHERE n.user.id = :userId AND n.status = :status")
-    Long countByUserIdAndIsRead(@Param("userId") Long userId, @Param("status") String status);
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.userId = :userId AND n.isRead = 'UNREAD'")
+    Integer countUnreadByUserId(@Param("userId") Long userId);
 }

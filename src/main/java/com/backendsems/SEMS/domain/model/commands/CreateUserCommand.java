@@ -1,34 +1,20 @@
 package com.backendsems.SEMS.domain.model.commands;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * CreateUserCommand
- * Comando para crear un nuevo usuario en el sistema
+ * Command para crear un nuevo User Aggregate
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class CreateUserCommand {
-    
-    private String email;
-    private String password;
-    private String firstName;
-    private String lastName;
-    private String phone;
-    private String role;
-    
-    public void validate() {
+public record CreateUserCommand(
+        String email,
+        String firstName,
+        String lastName,
+        String password
+) {
+    /**
+     * Constructor que incluye validaciones
+     */
+    public CreateUserCommand {
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email es requerido");
-        }
-        
-        if (password == null || password.length() < 6) {
-            throw new IllegalArgumentException("Password debe tener al menos 6 caracteres");
         }
         
         if (firstName == null || firstName.trim().isEmpty()) {
@@ -37,6 +23,10 @@ public class CreateUserCommand {
         
         if (lastName == null || lastName.trim().isEmpty()) {
             throw new IllegalArgumentException("Apellido es requerido");
+        }
+        
+        if (password == null || password.length() < 6) {
+            throw new IllegalArgumentException("Password debe tener al menos 6 caracteres");
         }
     }
 }

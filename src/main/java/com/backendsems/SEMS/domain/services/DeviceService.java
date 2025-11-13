@@ -1,8 +1,7 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.DeviceAggregate;
-import com.backendsems.SEMS.domain.model.aggregates.UserAggregate;
 import com.backendsems.SEMS.domain.model.entities.Device;
+import com.backendsems.SEMS.interfaces.rest.dto.CreateDeviceDto;
 import com.backendsems.SEMS.infrastructure.repositories.DeviceRepository;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,71 +18,139 @@ public class DeviceService {
     private final UserRepository userRepository;
     
     public List<Device> getAllDevicesByUserId(Long userId) {
-        List<DeviceAggregate> aggregates = deviceRepository.findByUserId(userId);
-        return aggregates.stream()
-                .map(aggregate -> Device.fromAggregate(aggregate, null)) // null como user temporal
-                .collect(Collectors.toList());
+        return deviceRepository.findByUserId(userId);
     }
     
     public List<Device> getActiveDevicesByUserId(Long userId) {
-        List<DeviceAggregate> aggregates = deviceRepository.findByUserId(userId);
-        return aggregates.stream()
-                .filter(DeviceAggregate::isActive)
-                .map(aggregate -> Device.fromAggregate(aggregate, null))
-                .collect(Collectors.toList());
+        return deviceRepository.findByUserIdAndIsActive(userId);
     }
     
     public Optional<Device> getDeviceById(Long deviceId) {
-        Optional<DeviceAggregate> aggregate = deviceRepository.findById(deviceId);
-        return aggregate.map(dev -> Device.fromAggregate(dev, null));
+        return deviceRepository.findById(deviceId);
     }
     
-    public Device createDevice(Long userId, Device device) {
-        UserAggregate userAggregate = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+    public Device createDevice(Long userId, CreateDeviceDto deviceDto) {
+        // Verificar que el usuario existe
+        var user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
-        DeviceAggregate deviceAggregate = device.toAggregate();
-        deviceAggregate.setUser(userAggregate);
-        DeviceAggregate savedAggregate = deviceRepository.save(deviceAggregate);
-        return Device.fromAggregate(savedAggregate, null);
+        Device.DeviceType deviceType = Device.DeviceType.fromString(deviceDto.getType());
+        Device.DeviceStatus deviceStatus = Device.DeviceStatus.OFF;
+        
+        // Si el status viene en el DTO, usarlo
+        if (deviceDto.getStatus() != null && !deviceDto.getStatus().trim().isEmpty()) {
+            try {
+                deviceStatus = Device.DeviceStatus.valueOf(deviceDto.getStatus().toUpperCase());
+            } catch (IllegalArgumentException e) {
+                deviceStatus = Device.DeviceStatus.OFF;
+            }
+        }
+        
+        Device device = Device.builder()
+                .name(deviceDto.getName())
+                .category(deviceDto.getCategory() != null ? deviceDto.getCategory() : deviceType.getDisplayName())
+                .type(deviceType)
+                .location(deviceDto.getLocation())
+                .brand(deviceDto.getBrand())
+                .model(deviceDto.getModel())
+                .status(deviceStatus)
+                .userId(userId)
+                .isActive(deviceStatus == Device.DeviceStatus.ON)
+                .realTimeStatus(deviceStatus.getDisplayName())
+                .lastActive(deviceStatus == Device.DeviceStatus.ON ? "Now" : "Never")
+                .alertHistory("No alerts")
+                .energyConsumption("0 kWh this week")
+                .consumptionKwh(0.0)
+                .efficiencyRating(85)
+                .build();
+        
+        // Establecer la categoría basada en el tipo si no se proporciona
+        if (device.getCategory() == null || device.getCategory().equals(deviceType.name())) {
+            device.setCategory(device.getCategoryFromType());
+        }
+        
+        Device savedDevice = deviceRepository.save(device);
+        
+        // Actualizar contador de dispositivos activos del usuario
+        if (savedDevice.getIsActive()) {
+            user.setActiveDevicesCount(user.getActiveDevicesCount() + 1);
+            userRepository.save(user);
+        }
+        
+        return savedDevice;
     }
     
     public Device updateDevice(Long deviceId, Device deviceUpdate) {
-        DeviceAggregate existingAggregate = deviceRepository.findById(deviceId)
-            .orElseThrow(() -> new RuntimeException("Device not found"));
+        Device existingDevice = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
         
-        // Actualizar campos básicos del agregado
-        existingAggregate.setName(deviceUpdate.getName());
-        existingAggregate.setType(DeviceAggregate.DeviceType.valueOf(deviceUpdate.getType().name()));
+        // Actualizar campos
+        if (deviceUpdate.getName() != null) {
+            existingDevice.setName(deviceUpdate.getName());
+        }
+        if (deviceUpdate.getType() != null) {
+            existingDevice.setType(deviceUpdate.getType());
+            existingDevice.setCategory(existingDevice.getCategoryFromType());
+        }
+        if (deviceUpdate.getLocation() != null) {
+            existingDevice.setLocation(deviceUpdate.getLocation());
+        }
+        if (deviceUpdate.getBrand() != null) {
+            existingDevice.setBrand(deviceUpdate.getBrand());
+        }
+        if (deviceUpdate.getModel() != null) {
+            existingDevice.setModel(deviceUpdate.getModel());
+        }
         
-        DeviceAggregate savedAggregate = deviceRepository.save(existingAggregate);
-        return Device.fromAggregate(savedAggregate, null);
+        return deviceRepository.save(existingDevice);
     }
     
     public void deleteDevice(Long deviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
+        
+        // Actualizar contador si el dispositivo estaba activo
+        if (device.getIsActive()) {
+            var user = userRepository.findById(device.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setActiveDevicesCount(Math.max(0, user.getActiveDevicesCount() - 1));
+            userRepository.save(user);
+        }
+        
         deviceRepository.deleteById(deviceId);
     }
     
     public List<Device> getDevicesByCategory(Long userId, String category) {
-        List<DeviceAggregate> aggregates = deviceRepository.findByUserId(userId);
-        return aggregates.stream()
-                .map(aggregate -> Device.fromAggregate(aggregate, null))
-                .filter(device -> category.equals(device.getCategory()))
-                .collect(Collectors.toList());
+        return deviceRepository.findByUserIdAndCategory(userId, category);
     }
     
     public Device toggleDeviceStatus(Long deviceId) {
-        DeviceAggregate deviceAggregate = deviceRepository.findById(deviceId)
-            .orElseThrow(() -> new RuntimeException("Device not found"));
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
         
-        // Usar métodos del dominio
-        if (deviceAggregate.isActive()) {
-            deviceAggregate.turnOff();
+        boolean wasActive = device.getIsActive();
+        
+        if (device.getIsActive()) {
+            device.turnOff();
         } else {
-            deviceAggregate.turnOn();
+            device.turnOn();
         }
         
-        DeviceAggregate savedAggregate = deviceRepository.save(deviceAggregate);
-        return Device.fromAggregate(savedAggregate, null);
+        Device savedDevice = deviceRepository.save(device);
+        
+        // Actualizar contador del usuario si cambió el estado activo
+        if (wasActive != savedDevice.getIsActive()) {
+            var user = userRepository.findById(device.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            if (savedDevice.getIsActive()) {
+                user.setActiveDevicesCount(user.getActiveDevicesCount() + 1);
+            } else {
+                user.setActiveDevicesCount(Math.max(0, user.getActiveDevicesCount() - 1));
+            }
+            userRepository.save(user);
+        }
+        
+        return savedDevice;
     }
 }

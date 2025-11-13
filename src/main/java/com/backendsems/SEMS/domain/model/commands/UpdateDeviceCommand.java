@@ -3,9 +3,10 @@ package com.backendsems.SEMS.domain.model.commands;
 import com.backendsems.SEMS.domain.model.aggregates.DeviceAggregate;
 
 /**
- * Command para crear un nuevo Device Aggregate
+ * Command para actualizar un Device Aggregate
  */
-public record CreateDeviceCommand(
+public record UpdateDeviceCommand(
+        Long deviceId,
         String name,
         DeviceAggregate.DeviceType type,
         Long userId
@@ -13,7 +14,11 @@ public record CreateDeviceCommand(
     /**
      * Constructor que incluye validaciones
      */
-    public CreateDeviceCommand {
+    public UpdateDeviceCommand {
+        if (deviceId == null || deviceId <= 0) {
+            throw new IllegalArgumentException("ID de dispositivo válido es requerido");
+        }
+        
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Nombre del dispositivo es requerido");
         }

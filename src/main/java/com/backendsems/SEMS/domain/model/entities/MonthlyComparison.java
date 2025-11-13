@@ -20,8 +20,8 @@ public class MonthlyComparison {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @OneToMany(mappedBy = "monthlyComparison", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<MonthlyData> months;
+    // @OneToMany - Relación eliminada para evitar duplicación de tablas
+    // private List<MonthlyData> months;
     
     @Column(name = "current_month", length = 3)
     private String currentMonth;
@@ -34,6 +34,8 @@ public class MonthlyComparison {
     private User user;
 }
 
+/*
+// ENTIDAD ELIMINADA - DUPLICABA DATOS CON OTRAS TABLAS
 @Entity
 @Table(name = "monthly_data")
 @Data
@@ -59,3 +61,4 @@ class MonthlyData {
     @JoinColumn(name = "monthly_comparison_id")
     private MonthlyComparison monthlyComparison;
 }
+*/
