@@ -19,23 +19,23 @@ public interface WeeklyConsumptionRepository extends JpaRepository<WeeklyConsump
     
     List<WeeklyConsumption> findByUserId(Long userId);
     
-    @Query("SELECT w FROM WeeklyConsumption w WHERE w.userId = :userId ORDER BY w.startDate DESC")
+    @Query("SELECT w FROM WeeklyConsumption w LEFT JOIN FETCH w.dataPoints WHERE w.userId = :userId ORDER BY w.startDate DESC")
     List<WeeklyConsumption> findByUserIdOrderByDateDesc(@Param("userId") Long userId);
     
-    @Query("SELECT w FROM WeeklyConsumption w WHERE w.userId = :userId AND w.week LIKE :year%")
+    @Query("SELECT w FROM WeeklyConsumption w LEFT JOIN FETCH w.dataPoints WHERE w.userId = :userId AND w.week LIKE :year%")
     List<WeeklyConsumption> findByUserIdAndYear(@Param("userId") Long userId, @Param("year") String year);
     
-    @Query("SELECT w FROM WeeklyConsumption w WHERE w.userId = :userId AND w.week = :week")
+    @Query("SELECT w FROM WeeklyConsumption w LEFT JOIN FETCH w.dataPoints WHERE w.userId = :userId AND w.week = :week")
     Optional<WeeklyConsumption> findByUserIdAndYearAndWeek(@Param("userId") Long userId, 
                                                            @Param("week") String week);
     
-    @Query("SELECT w FROM WeeklyConsumption w WHERE w.userId = :userId AND w.startDate >= :startDate AND w.endDate <= :endDate")
+    @Query("SELECT w FROM WeeklyConsumption w LEFT JOIN FETCH w.dataPoints WHERE w.userId = :userId AND w.startDate >= :startDate AND w.endDate <= :endDate")
     List<WeeklyConsumption> findByUserIdAndDateRange(@Param("userId") Long userId, 
                                                       @Param("startDate") LocalDate startDate, 
                                                       @Param("endDate") LocalDate endDate);
     
-    @Query("SELECT w FROM WeeklyConsumption w WHERE w.userId = :userId ORDER BY w.startDate DESC LIMIT :limit")
-    List<WeeklyConsumption> findRecentWeeklyConsumption(@Param("userId") Long userId, @Param("limit") Integer limit);
+    @Query("SELECT w FROM WeeklyConsumption w LEFT JOIN FETCH w.dataPoints WHERE w.userId = :userId ORDER BY w.startDate DESC")
+    List<WeeklyConsumption> findRecentWeeklyConsumption(@Param("userId") Long userId);
     
     @Query("SELECT AVG(w.totalConsumption) FROM WeeklyConsumption w WHERE w.userId = :userId AND w.week LIKE :year%")
     Double getAverageWeeklyConsumption(@Param("userId") Long userId, @Param("year") String year);

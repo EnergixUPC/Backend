@@ -44,7 +44,10 @@ public class ReportsService {
      * Obtiene el consumo semanal más reciente (últimas N semanas)
      */
     public List<WeeklyConsumption> getRecentWeeklyConsumption(Long userId, Integer weeks) {
-        return weeklyConsumptionRepository.findRecentWeeklyConsumption(userId, weeks);
+        List<WeeklyConsumption> allRecords = weeklyConsumptionRepository.findRecentWeeklyConsumption(userId);
+        return allRecords.stream()
+                .limit(weeks)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -121,22 +124,8 @@ public class ReportsService {
         // Establecer el userId directamente sin crear User entity
         weeklyConsumption.setUserId(userId);
 
-        // Crear datos para cada día de la semana en formato db.json
-        String[] days = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
-        for (int i = 0; i < 7; i++) {
-            LocalDate currentDate = weekStartDate.plusDays(i);
-            
-            WeeklyConsumptionData dailyData = WeeklyConsumptionData.builder()
-                    .day(days[i])
-                    .date(currentDate)
-                    .consumption(0.0)
-                    .efficiency(85)
-                    .trend("stable")
-                    .weeklyConsumption(weeklyConsumption)
-                    .build();
-            
-            weeklyConsumption.getDataPoints().add(dailyData);
-        }
+        // Generar datos dinámicos y realistas
+        generateRealisticWeeklyData(weeklyConsumption, weekStartDate);
 
         return weeklyConsumptionRepository.save(weeklyConsumption);
     }
@@ -171,65 +160,26 @@ public class ReportsService {
 
     /**
      * Genera datos de consumo semanal de ejemplo para testing
-     * Utiliza la estructura del db.json pero con datos realistas generados
+     * Utiliza datos completamente dinámicos y realistas
      */
     @Transactional
     public void generateSampleWeeklyData(Long userId) {
         try {
-            System.out.println("DEBUG: Iniciando generateSampleWeeklyData para userId: " + userId);
-            
             // Crear datos para la semana actual
             LocalDate weekStart = LocalDate.now().with(java.time.DayOfWeek.MONDAY);
-            System.out.println("DEBUG: Semana inicio: " + weekStart);
             
-            WeeklyConsumption weeklyConsumption = createWeeklyConsumption(userId, weekStart);
-            System.out.println("DEBUG: WeeklyConsumption creado: " + weeklyConsumption.getId());
+            // Verificar si ya existen datos para esta semana
+            String weekString = String.format("%d-W%02d", weekStart.getYear(), weekStart.get(WeekFields.ISO.weekOfYear()));
+            Optional<WeeklyConsumption> existing = weeklyConsumptionRepository.findByUserIdAndYearAndWeek(userId, weekString);
             
-            // Generar datos realistas (no hardcodeados)
-            java.util.Random random = new java.util.Random();
-            double baseConsumption = 30.0 + (random.nextDouble() * 20.0); // Entre 30-50 kWh base
-            
-            String[] trendOptions = {"up", "down", "stable"};
-            
-            for (int i = 0; i < weeklyConsumption.getDataPoints().size(); i++) {
-                WeeklyConsumptionData dataPoint = weeklyConsumption.getDataPoints().get(i);
-                
-                // Generar consumo con variación natural
-                double dailyVariation = -10.0 + (random.nextDouble() * 20.0); // ±10 kWh de variación
-                double consumption = Math.max(15.0, baseConsumption + dailyVariation);
-                
-                // Los fines de semana tienden a tener mayor consumo
-                if (i >= 5) { // SAT, SUN
-                    consumption += 5.0 + (random.nextDouble() * 15.0);
-                }
-                
-                // Generar eficiencia realista (entre 60-90%)
-                int efficiency = 60 + random.nextInt(31);
-                
-                // Generar tendencia
-                String trend = trendOptions[random.nextInt(trendOptions.length)];
-                
-                dataPoint.setConsumption(Math.round(consumption * 10.0) / 10.0); // 1 decimal
-                dataPoint.setEfficiency(efficiency);
-                dataPoint.setTrend(trend);
+            if (existing.isPresent()) {
+                updateWeeklyConsumptionWithRealisticData(existing.get());
+            } else {
+                createWeeklyConsumption(userId, weekStart);
             }
             
-            // Calcular totales y estadísticas
-            weeklyConsumption.calculateTotalConsumption();
-            weeklyConsumption.calculateAverageConsumption();
-            weeklyConsumption.findPeakDay();
-            
-            // Calcular promedio semanal basado en los datos generados
-            weeklyConsumption.setWeeklyAverage(weeklyConsumption.getAverageConsumption());
-            
-            System.out.println("DEBUG: Guardando en repositorio");
-            weeklyConsumptionRepository.save(weeklyConsumption);
-            System.out.println("DEBUG: WeeklyConsumption guardado exitosamente");
-            
         } catch (Exception e) {
-            System.out.println("ERROR en generateSampleWeeklyData: " + e.getMessage());
-            e.printStackTrace();
-            throw e;
+            throw new RuntimeException("Error generating sample weekly data for user " + userId, e);
         }
     }
 
@@ -249,5 +199,158 @@ public class ReportsService {
         }
         
         return 0.0;
+    }
+
+    /**
+     * Genera datos realistas para un consumo semanal
+     */
+    private void generateRealisticWeeklyData(WeeklyConsumption weeklyConsumption, LocalDate weekStartDate) {
+        java.util.Random random = new java.util.Random();
+        double baseConsumption = generateBaseConsumption(weeklyConsumption.getUserId(), weekStartDate);
+        
+        // Generar datos para cada día de la semana
+        for (int day = 0; day < 7; day++) {
+            LocalDate currentDate = weekStartDate.plusDays(day);
+            WeeklyConsumptionData dataPoint = new WeeklyConsumptionData();
+            
+            // Configurar información básica del día
+            dataPoint.setDay(currentDate.getDayOfWeek().toString());
+            dataPoint.setDate(currentDate);
+            
+            // Generar consumo realista
+            double consumption = generateDailyConsumption(baseConsumption, day, random);
+            dataPoint.setConsumption(Math.round(consumption * 10.0) / 10.0);
+            
+            // Generar eficiencia
+            int efficiency = generateEfficiency(consumption, random);
+            dataPoint.setEfficiency(efficiency);
+            
+            // Generar tendencia
+            String trend = day == 0 ? "stable" : generateTrend(
+                weeklyConsumption.getDataPoints().get(day - 1).getConsumption(), consumption);
+            dataPoint.setTrend(trend);
+            
+            // Establecer relación con el consumo semanal
+            dataPoint.setWeeklyConsumption(weeklyConsumption);
+            weeklyConsumption.getDataPoints().add(dataPoint);
+        }
+        
+        // Calcular estadísticas finales
+        calculateWeeklyStatistics(weeklyConsumption);
+    }
+
+    /**
+     * Genera consumo base realista basado en el usuario y la época
+     */
+    private double generateBaseConsumption(Long userId, LocalDate date) {
+        java.util.Random random = new java.util.Random(userId + date.getDayOfYear()); // Seed consistente
+        
+        // Variación estacional
+        double seasonalFactor = 1.0;
+        int month = date.getMonthValue();
+        if (month >= 12 || month <= 2) { // Invierno
+            seasonalFactor = 1.2;
+        } else if (month >= 6 && month <= 8) { // Verano
+            seasonalFactor = 1.3;
+        }
+        
+        // Consumo base entre 25-45 kWh por día
+        return (25.0 + (random.nextDouble() * 20.0)) * seasonalFactor;
+    }
+
+    /**
+     * Genera consumo diario con patrones realistas
+     */
+    private double generateDailyConsumption(double baseConsumption, int dayIndex, java.util.Random random) {
+        double consumption = baseConsumption;
+        
+        // Variación diaria natural (±15%)
+        double dailyVariation = -0.15 + (random.nextDouble() * 0.3);
+        consumption *= (1 + dailyVariation);
+        
+        // Patrones de días de la semana
+        switch (dayIndex) {
+            case 0: // Lunes - inicio de semana
+                consumption *= 0.9;
+                break;
+            case 1, 2, 3: // Mar, Mie, Jue - días laborales normales
+                consumption *= 0.95;
+                break;
+            case 4: // Viernes - fin de semana laboral
+                consumption *= 1.05;
+                break;
+            case 5, 6: // Sáb, Dom - fines de semana
+                consumption *= 1.15 + (random.nextDouble() * 0.2);
+                break;
+        }
+        
+        return Math.max(10.0, consumption); // Mínimo 10 kWh
+    }
+
+    /**
+     * Genera eficiencia basada en el consumo
+     */
+    private int generateEfficiency(double consumption, java.util.Random random) {
+        // Mayor consumo tiende a menor eficiencia
+        int baseEfficiency;
+        if (consumption > 50) {
+            baseEfficiency = 60 + random.nextInt(21); // 60-80%
+        } else if (consumption > 30) {
+            baseEfficiency = 70 + random.nextInt(21); // 70-90%
+        } else {
+            baseEfficiency = 75 + random.nextInt(16); // 75-90%
+        }
+        
+        return Math.min(95, Math.max(50, baseEfficiency));
+    }
+
+    /**
+     * Genera tendencia basada en la comparación con el día anterior
+     */
+    private String generateTrend(double previousConsumption, double currentConsumption) {
+        double difference = currentConsumption - previousConsumption;
+        double percentageChange = (difference / previousConsumption) * 100;
+        
+        if (percentageChange > 5) {
+            return "up";
+        } else if (percentageChange < -5) {
+            return "down";
+        } else {
+            return "stable";
+        }
+    }
+
+    /**
+     * Calcula todas las estadísticas de la semana
+     */
+    private void calculateWeeklyStatistics(WeeklyConsumption weeklyConsumption) {
+        weeklyConsumption.calculateTotalConsumption();
+        weeklyConsumption.calculateAverageConsumption();
+        weeklyConsumption.findPeakDay();
+        weeklyConsumption.setWeeklyAverage(weeklyConsumption.getAverageConsumption());
+    }
+
+    /**
+     * Actualiza datos existentes con valores realistas
+     */
+    private void updateWeeklyConsumptionWithRealisticData(WeeklyConsumption weeklyConsumption) {
+        java.util.Random random = new java.util.Random();
+        double baseConsumption = generateBaseConsumption(weeklyConsumption.getUserId(), weeklyConsumption.getStartDate());
+        
+        for (int i = 0; i < weeklyConsumption.getDataPoints().size(); i++) {
+            WeeklyConsumptionData dataPoint = weeklyConsumption.getDataPoints().get(i);
+            
+            double consumption = generateDailyConsumption(baseConsumption, i, random);
+            int efficiency = generateEfficiency(consumption, random);
+            String trend = i == 0 ? "stable" : generateTrend(
+                weeklyConsumption.getDataPoints().get(i-1).getConsumption(), consumption);
+            
+            dataPoint.setConsumption(Math.round(consumption * 10.0) / 10.0);
+            dataPoint.setEfficiency(efficiency);
+            dataPoint.setTrend(trend);
+        }
+        
+        calculateWeeklyStatistics(weeklyConsumption);
+        weeklyConsumptionRepository.save(weeklyConsumption);
     }
 }
