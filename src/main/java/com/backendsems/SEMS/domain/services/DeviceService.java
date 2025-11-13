@@ -31,9 +31,8 @@ public class DeviceService {
     
     public Device createDevice(Long userId, CreateDeviceDto deviceDto) {
         // Verificar que el usuario existe
-        if (!userRepository.existsById(userId)) {
-            throw new RuntimeException("User not found with id: " + userId);
-        }
+        var user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         
         Device.DeviceType deviceType = Device.DeviceType.fromString(deviceDto.getType());
         Device.DeviceStatus deviceStatus = Device.DeviceStatus.OFF;
@@ -70,7 +69,15 @@ public class DeviceService {
             device.setCategory(device.getCategoryFromType());
         }
         
-        return deviceRepository.save(device);
+        Device savedDevice = deviceRepository.save(device);
+        
+        // Actualizar contador de dispositivos activos del usuario
+        if (savedDevice.getIsActive()) {
+            user.setActiveDevicesCount(user.getActiveDevicesCount() + 1);
+            userRepository.save(user);
+        }
+        
+        return savedDevice;
     }
     
     public Device updateDevice(Long deviceId, Device deviceUpdate) {
@@ -99,6 +106,17 @@ public class DeviceService {
     }
     
     public void deleteDevice(Long deviceId) {
+        Device device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found"));
+        
+        // Actualizar contador si el dispositivo estaba activo
+        if (device.getIsActive()) {
+            var user = userRepository.findById(device.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            user.setActiveDevicesCount(Math.max(0, user.getActiveDevicesCount() - 1));
+            userRepository.save(user);
+        }
+        
         deviceRepository.deleteById(deviceId);
     }
     
@@ -110,12 +128,29 @@ public class DeviceService {
         Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new RuntimeException("Device not found"));
         
+        boolean wasActive = device.getIsActive();
+        
         if (device.getIsActive()) {
             device.turnOff();
         } else {
             device.turnOn();
         }
         
-        return deviceRepository.save(device);
+        Device savedDevice = deviceRepository.save(device);
+        
+        // Actualizar contador del usuario si cambió el estado activo
+        if (wasActive != savedDevice.getIsActive()) {
+            var user = userRepository.findById(device.getUserId())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            if (savedDevice.getIsActive()) {
+                user.setActiveDevicesCount(user.getActiveDevicesCount() + 1);
+            } else {
+                user.setActiveDevicesCount(Math.max(0, user.getActiveDevicesCount() - 1));
+            }
+            userRepository.save(user);
+        }
+        
+        return savedDevice;
     }
 }
