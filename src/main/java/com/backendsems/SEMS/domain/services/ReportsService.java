@@ -1,7 +1,6 @@
 package com.backendsems.SEMS.domain.services;
 
-import com.backendsems.SEMS.domain.model.aggregates.DeviceAggregate;
-import com.backendsems.SEMS.domain.model.entities.User;
+import com.backendsems.SEMS.domain.model.entities.Device;
 import com.backendsems.SEMS.domain.model.entities.WeeklyConsumption;
 import com.backendsems.SEMS.domain.model.entities.WeeklyConsumptionData;
 import com.backendsems.SEMS.infrastructure.repositories.DeviceRepository;
@@ -84,7 +83,7 @@ public class ReportsService {
      * Obtiene el ranking de dispositivos por consumo para un período
      */
     public List<Map<String, Object>> getDeviceRanking(Long userId, LocalDate startDate, LocalDate endDate) {
-        List<DeviceAggregate> devices = deviceRepository.findByUserId(userId);
+        List<Device> devices = deviceRepository.findByUserId(userId);
         
         return devices.stream()
                 .map(device -> {
@@ -92,8 +91,8 @@ public class ReportsService {
                     deviceData.put("id", device.getId());
                     deviceData.put("name", device.getName());
                     deviceData.put("type", device.getType().toString());
-                    deviceData.put("totalConsumption", device.getTotalConsumption());
-                    deviceData.put("isActive", device.isActive());
+                    deviceData.put("totalConsumption", device.getConsumptionKwh());
+                    deviceData.put("isActive", device.getIsActive());
                     return deviceData;
                 })
                 .sorted((d1, d2) -> Double.compare(
@@ -107,28 +106,20 @@ public class ReportsService {
      */
     @Transactional
     public WeeklyConsumption createWeeklyConsumption(Long userId, LocalDate weekStartDate) {
-        // Crear usuario mock para testing (sin persistir)
-        User user = User.builder()
-                .id(userId)
-                .email("test@example.com")
-                .username("testuser") 
-                .firstName("Test")
-                .lastName("User")
-                .role(User.Role.USER)
-                .build();
-
         LocalDate weekEndDate = weekStartDate.plusDays(6);
         int weekNumber = weekStartDate.get(WeekFields.ISO.weekOfYear());
         int year = weekStartDate.getYear();
         String week = String.format("%d-W%02d", year, weekNumber);
 
-        WeeklyConsumption weeklyConsumption = WeeklyConsumption.builder()
-                .startDate(weekStartDate)
-                .endDate(weekEndDate)
-                .week(week)
-                .user(user)
-                .dataPoints(new ArrayList<>())
-                .build();
+        // Crear WeeklyConsumption sin User (se manejará por userId)
+        WeeklyConsumption weeklyConsumption = new WeeklyConsumption();
+        weeklyConsumption.setStartDate(weekStartDate);
+        weeklyConsumption.setEndDate(weekEndDate);
+        weeklyConsumption.setWeek(week);
+        weeklyConsumption.setDataPoints(new ArrayList<>());
+        
+        // Establecer el userId directamente sin crear User entity
+        weeklyConsumption.setUserId(userId);
 
         // Crear datos para cada día de la semana en formato db.json
         String[] days = {"MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"};
