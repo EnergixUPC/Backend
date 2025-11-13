@@ -31,7 +31,7 @@ public class ConsumptionByCategory {
     private User user;
 }
 
-// @Entity  // ENTIDAD SECUNDARIA DESHABILITADA
+@Entity  // REHABILITADA - NECESARIA PARA RELACIONES
 @Table(name = "category_data")
 @Data
 @Builder

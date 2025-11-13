@@ -42,7 +42,7 @@ public class DailyConsumption {
     private User user;
 }
 
-// @Entity  // ENTIDAD SECUNDARIA DESHABILITADA
+@Entity  // REHABILITADA - NECESARIA PARA EVITAR ERRORES
 @Table(name = "consumption_data_points")
 @Data
 @Builder
