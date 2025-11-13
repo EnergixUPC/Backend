@@ -59,9 +59,8 @@ public class WeeklyConsumption {
     @Column(name = "weekly_average")
     private Double weeklyAverage;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
     
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
