@@ -20,8 +20,8 @@ public class ConsumptionByCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @OneToMany(mappedBy = "consumptionByCategory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CategoryData> categories;
+    // @OneToMany - Relación eliminada para evitar duplicación de tablas
+    // private List<CategoryData> categories;
     
     @Column(name = "total_consumption")
     private Double totalConsumption;
@@ -31,7 +31,7 @@ public class ConsumptionByCategory {
     private User user;
 }
 
-@Entity  // REHABILITADA - NECESARIA PARA RELACIONES
+// @Entity  // ENTIDAD SECUNDARIA DESHABILITADA
 @Table(name = "category_data")
 @Data
 @Builder

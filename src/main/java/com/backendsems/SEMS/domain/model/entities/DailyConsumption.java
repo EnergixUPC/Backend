@@ -25,8 +25,8 @@ public class DailyConsumption {
     @Column(nullable = false)
     private LocalDate date;
     
-    @OneToMany(mappedBy = "dailyConsumption", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<ConsumptionDataPoint> dataPoints;
+    // @OneToMany - Relación eliminada para evitar duplicación de tablas
+    // private List<ConsumptionDataPoint> dataPoints;
     
     @Column(name = "total_consumption")
     private Double totalConsumption;
@@ -42,7 +42,9 @@ public class DailyConsumption {
     private User user;
 }
 
-@Entity  // REHABILITADA - NECESARIA PARA EVITAR ERRORES
+/*
+// ENTIDAD ELIMINADA - DUPLICABA DATOS CON OTRAS TABLAS
+@Entity
 @Table(name = "consumption_data_points")
 @Data
 @Builder
@@ -64,3 +66,4 @@ class ConsumptionDataPoint {
     @JoinColumn(name = "daily_consumption_id")
     private DailyConsumption dailyConsumption;
 }
+*/
