@@ -21,6 +21,7 @@ public class DataController {
     private final DeviceService deviceService;
     private final NotificationService notificationService;
     private final DevicePreferenceService devicePreferenceService;
+    private final ReportsService reportsService;
     
     @PostMapping("/initialize")
     public ResponseEntity<Map<String, String>> initializeUserData(Authentication authentication) {
@@ -47,6 +48,9 @@ public class DataController {
             // Crear alertas de ejemplo
             createSampleAlerts(userId);
             
+            // Crear datos de consumo semanal de ejemplo
+            reportsService.generateSampleWeeklyData(userId);
+            
             Map<String, String> response = new HashMap<>();
             response.put("message", "User data initialized successfully");
             response.put("status", "success");
@@ -71,6 +75,8 @@ public class DataController {
             summary.put("notifications", notificationService.getAllNotificationsByUserId(userId));
             summary.put("alerts", notificationService.getAllAlertsByUserId(userId));
             summary.put("preferences", devicePreferenceService.getDevicePreferences(userId));
+            summary.put("reportsStats", reportsService.getWeeklyConsumptionStats(userId));
+            summary.put("recentWeeklyConsumption", reportsService.getRecentWeeklyConsumption(userId, 8));
             
             return ResponseEntity.ok(summary);
         } catch (Exception e) {
