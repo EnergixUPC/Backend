@@ -3,7 +3,7 @@ package com.backendsems.SEMS.domain.model.aggregates;
 import com.backendsems.SEMS.domain.model.commands.CreateUserCommand;
 import com.backendsems.SEMS.domain.model.valueobjects.Email;
 import com.backendsems.SEMS.domain.model.valueobjects.UserProfile;
-import com.backendsems.shared.infrastructure.persistence.jpa.AuditableAbstractAggregateRoot;
+import com.backendsems.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;

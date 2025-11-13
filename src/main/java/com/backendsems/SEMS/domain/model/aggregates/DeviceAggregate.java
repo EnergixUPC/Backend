@@ -3,7 +3,7 @@ package com.backendsems.SEMS.domain.model.aggregates;
 import com.backendsems.SEMS.domain.model.commands.CreateDeviceCommand;
 import com.backendsems.SEMS.domain.model.valueobjects.DeviceStatus;
 import com.backendsems.SEMS.domain.model.valueobjects.EnergyConsumption;
-import com.backendsems.shared.infrastructure.persistence.jpa.AuditableAbstractAggregateRoot;
+import com.backendsems.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;

@@ -1,7 +1,7 @@
 package com.backendsems.SEMS.domain.model.aggregates;
 
 import com.backendsems.SEMS.domain.model.commands.CreateNotificationCommand;
-import com.backendsems.shared.infrastructure.persistence.jpa.AuditableAbstractAggregateRoot;
+import com.backendsems.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
