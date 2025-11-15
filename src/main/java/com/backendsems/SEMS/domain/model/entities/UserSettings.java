@@ -2,12 +2,12 @@
 package com.backendsems.SEMS.domain.model.entities;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.hibernate.annotations.Type;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
@@ -52,22 +52,13 @@ public class UserSettings {
     @Column(name = "schedule_end")
     private String scheduleEnd = "22:00 PM";
 
-    // ⬇️ SOLUCIÓN: Usar @org.hibernate.annotations.CollectionId para forzar nombre
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "user_settings_report_frequency", // ⬅️ SINGULAR (sin "ies")
-            joinColumns = @JoinColumn(name = "user_settings_id")
-    )
-    @Column(name = "frequency")
-    private List<String> reportFrequencies = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_settings_id")
+    private List<ReportFrequency> reportFrequencies = new ArrayList<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(
-            name = "user_settings_report_format", // ⬅️ SINGULAR (sin "s")
-            joinColumns = @JoinColumn(name = "user_settings_id")
-    )
-    @Column(name = "format")
-    private List<String> reportFormats = new ArrayList<>();
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "user_settings_id")
+    private List<ReportFormat> reportFormats = new ArrayList<>();
 
     @Column(name = "two_factor_enabled")
     private Boolean twoFactorEnabled = false;
@@ -80,14 +71,13 @@ public class UserSettings {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ⬇️ Builder personalizado para inicializar las listas
     @Builder
     public UserSettings(Long id, Long userId,
                         Boolean turnOffPatio, Boolean turnOffDevices,
                         Boolean unplugWeekdays, Boolean runDishwasher,
                         Boolean highConsumption, Boolean summary,
                         String scheduleStart, String scheduleEnd,
-                        List<String> reportFrequencies, List<String> reportFormats,
+                        List<ReportFrequency> reportFrequencies, List<ReportFormat> reportFormats,
                         Boolean twoFactorEnabled,
                         LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
