@@ -21,9 +21,6 @@ WORKDIR /app
 # Copy the built JAR from the build stage
 COPY --from=build /app/target/backend-sems-0.0.1-SNAPSHOT.jar app.jar
 
-# Copy .env file if needed (or mount it as volume)
-COPY .env .env
-
 # Expose the port
 EXPOSE 8080
 
