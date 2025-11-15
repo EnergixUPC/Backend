@@ -1,8 +1,11 @@
 // src/main/java/com/backendsems/SEMS/interfaces/rest/mapper/SettingsMapper.java
 package com.backendsems.SEMS.interfaces.rest.mapper;
 
+import com.backendsems.SEMS.domain.model.entities.ReportFormat;
+import com.backendsems.SEMS.domain.model.entities.ReportFrequency;
 import com.backendsems.SEMS.domain.model.entities.UserSettings;
 import com.backendsems.SEMS.interfaces.rest.dto.SettingsDTO;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,8 +31,8 @@ public class SettingsMapper {
                         .scheduleStart(entity.getScheduleStart())
                         .scheduleEnd(entity.getScheduleEnd())
                         .build())
-                .reportFrequencies(entity.getReportFrequencies())
-                .reportFormats(entity.getReportFormats())
+                .reportFrequencies(entity.getReportFrequencies().stream().map(ReportFrequency::getFrequency).collect(Collectors.toList()))
+                .reportFormats(entity.getReportFormats().stream().map(ReportFormat::getFormat).collect(Collectors.toList()))
                 .twoFactorEnabled(entity.getTwoFactorEnabled())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -66,12 +69,12 @@ public class SettingsMapper {
 
         if (dto.getReportFrequencies() != null) {
             existing.getReportFrequencies().clear();
-            existing.getReportFrequencies().addAll(dto.getReportFrequencies());
+            existing.getReportFrequencies().addAll(dto.getReportFrequencies().stream().map(f -> ReportFrequency.builder().frequency(f).build()).collect(Collectors.toList()));
         }
 
         if (dto.getReportFormats() != null) {
             existing.getReportFormats().clear();
-            existing.getReportFormats().addAll(dto.getReportFormats());
+            existing.getReportFormats().addAll(dto.getReportFormats().stream().map(f -> ReportFormat.builder().format(f).build()).collect(Collectors.toList()));
         }
 
         if (dto.getTwoFactorEnabled() != null) {
