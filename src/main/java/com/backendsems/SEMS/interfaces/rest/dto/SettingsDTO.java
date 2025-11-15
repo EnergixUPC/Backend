@@ -9,6 +9,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
+/**
+ * DTO que representa la configuración de usuario (ajustes).
+ *
+ * Agrupa el modo de ahorro automático, configuración de notificaciones,
+ * formatos y frecuencias de informe, estado de 2FA y metadatos de creación/actualización.
+ */
+
+
 @Data
 @Builder
 @NoArgsConstructor

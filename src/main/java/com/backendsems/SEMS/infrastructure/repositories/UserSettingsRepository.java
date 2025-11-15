@@ -6,6 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+/**
+ * Repositorio Spring Data JPA para la entidad UserSettings.
+ *
+ * Proporciona operaciones CRUD heredadas y consultas derivadas para
+ * obtener la configuración por id de usuario y comprobar su existencia.
+ */
 
 @Repository
 public interface UserSettingsRepository extends JpaRepository<UserSettings, Long> {
