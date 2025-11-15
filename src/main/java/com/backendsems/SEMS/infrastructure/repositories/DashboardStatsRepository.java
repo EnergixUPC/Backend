@@ -7,6 +7,14 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+
+/**
+ * Repositorio Spring Data JPA para la entidad DashboardStats.
+ *
+ * Proporciona operaciones CRUD heredadas y consultas para buscar estadísticas
+ * por instancia de User o por el id del usuario.
+ */
+
 @Repository
 public interface DashboardStatsRepository extends JpaRepository<DashboardStats, Long> {
     Optional<DashboardStats> findByUser(User user);
