@@ -1,4 +1,4 @@
-package com.backendsems.SEMS.domain.services;
+package com.backendsems.iam.domain.model.services;
 
 import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.valueobjects.LoginCredentials;

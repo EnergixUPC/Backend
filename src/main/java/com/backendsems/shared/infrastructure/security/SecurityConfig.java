@@ -1,6 +1,6 @@
 package com.backendsems.shared.infrastructure.security;
 
-import com.backendsems.SEMS.domain.services.UserDetailsServiceImpl;
+import com.backendsems.iam.infrastructure.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

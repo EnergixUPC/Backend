@@ -1,4 +1,4 @@
-package com.backendsems.SEMS.domain.services;
+package com.backendsems.iam.infrastructure;
 
 import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
@@ -51,7 +51,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         
         @Override
         public Collection<? extends GrantedAuthority> getAuthorities() {
-            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+            return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole().getName()));
         }
         
         @Override
