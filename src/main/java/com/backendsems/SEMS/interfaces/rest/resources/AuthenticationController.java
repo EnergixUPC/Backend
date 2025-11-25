@@ -5,14 +5,14 @@ import com.backendsems.SEMS.domain.model.valueobjects.LoginCredentials;
 import com.backendsems.SEMS.domain.model.valueobjects.TokenPair;
 import com.backendsems.SEMS.domain.model.valueobjects.Email;
 import com.backendsems.SEMS.domain.model.valueobjects.UserProfile;
-import com.backendsems.SEMS.domain.services.AuthenticationService;
+import com.backendsems.iam.domain.model.services.AuthenticationService;
 import com.backendsems.SEMS.interfaces.rest.dto.RegisterUserDto;
-import lombok.RequiredArgsConstructor;
+import com.backendsems.iam.domain.model.entities.Role;
+import com.backendsems.iam.infrastructure.repositories.RoleRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
 import java.util.Map;
 import java.util.HashMap;
@@ -23,9 +23,11 @@ public class AuthenticationController {
     
     private final AuthenticationService authenticationService;
     private final UserRepository userRepository;
-    public AuthenticationController(AuthenticationService authenticationService, UserRepository userRepository) {
+    private final RoleRepository roleRepository;
+    public AuthenticationController(AuthenticationService authenticationService, UserRepository userRepository, RoleRepository roleRepository) {
         this.authenticationService = authenticationService;
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginCredentials credentials) {
@@ -71,6 +73,10 @@ public class AuthenticationController {
                         .body(Map.of("error", "User with this email already exists"));
             }
 
+            // Obtener el rol por defecto
+            Role userRole = roleRepository.findByName("USER")
+                    .orElseThrow(() -> new RuntimeException("Role USER not found"));
+
             // Crear el User
             User user = User.builder()
                     .username(registerDto.getEmail())
@@ -80,7 +86,7 @@ public class AuthenticationController {
                     .lastName(registerDto.getLastName())
                     .phoneNumber(registerDto.getPhoneNumber())
                     .address(registerDto.getAddress())
-                    .role(User.Role.USER)
+                    .role(userRole)
                     .build();
 
             // Registrar el usuario

@@ -4,6 +4,8 @@ import com.backendsems.SEMS.domain.model.entities.User;
 import com.backendsems.SEMS.domain.model.commands.CreateUserCommand;
 import com.backendsems.SEMS.domain.model.events.UserCreatedEvent;
 import com.backendsems.SEMS.infrastructure.repositories.UserRepository;
+import com.backendsems.iam.domain.model.entities.Role;
+import com.backendsems.iam.infrastructure.repositories.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class CreateUserCommandHandler {
     
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
     
@@ -31,6 +34,10 @@ public class CreateUserCommandHandler {
             throw new IllegalArgumentException("El email ya está registrado");
         }
         
+        // Obtener el rol por defecto
+        Role userRole = roleRepository.findByName("USER")
+                .orElseThrow(() -> new RuntimeException("Role USER not found"));
+        
         // Crear el usuario
         User user = User.builder()
                 .email(command.email())
@@ -39,7 +46,7 @@ public class CreateUserCommandHandler {
                 .lastName(command.lastName())
                 .phoneNumber(null) // No disponible en el command
                 .password(passwordEncoder.encode(command.password()))
-                .role(User.Role.USER) // Valor por defecto
+                .role(userRole) // Valor por defecto
                 .build();
         
         // Guardar en base de datos

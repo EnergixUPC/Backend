@@ -1,6 +1,5 @@
-package com.backendsems.SEMS.domain.model.entities;
+package com.backendsems.iam.domain.model.entities;
 
-import com.backendsems.iam.domain.model.entities.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +11,7 @@ import java.time.LocalDateTime;
 /**
  * User Entity - Entidad JPA para persistencia de usuarios
  */
-@Entity(name = "SemsUser")
+@Entity(name = "IamUser")
 @Table(name = "user")
 @Data
 @Builder
@@ -39,7 +38,7 @@ public class User {
     @Column(name = "last_name", nullable = false)
     private String lastName;
     
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
     
@@ -76,6 +75,7 @@ public class User {
     @Column(name = "is_premium")
     private Boolean isPremium = false;
     
+
     public String getFullName() {
         return firstName + " " + lastName;
     }

@@ -1,4 +1,4 @@
-package com.backendsems.SEMS.domain.services;
+package com.backendsems.iam.domain.model.services;
 
 import com.backendsems.SEMS.domain.model.entities.User;
 import io.jsonwebtoken.Claims;
@@ -29,7 +29,7 @@ public class TokenService {
     public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
-        claims.put("role", user.getRole().name());
+        claims.put("role", user.getRole().getName());
         claims.put("email", user.getEmail());
         return createToken(claims, user.getEmail());
     }

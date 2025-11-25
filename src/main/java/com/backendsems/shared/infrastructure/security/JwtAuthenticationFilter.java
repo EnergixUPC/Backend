@@ -1,7 +1,7 @@
 package com.backendsems.shared.infrastructure.security;
 
-import com.backendsems.SEMS.domain.services.TokenService;
-import com.backendsems.SEMS.domain.services.UserDetailsServiceImpl;
+import com.backendsems.iam.domain.model.services.TokenService;
+import com.backendsems.iam.infrastructure.UserDetailsServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

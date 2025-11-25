@@ -1,8 +1,8 @@
-package com.backendsems.SEMS.interfaces.rest.resources;
+package com.backendsems.Profile.interfaces.rest.resources;
 
-import com.backendsems.SEMS.domain.model.entities.User;
-import com.backendsems.SEMS.domain.model.commands.UpdateProfileCommand;
-import com.backendsems.SEMS.domain.services.ProfileService;
+import com.backendsems.Profile.domain.model.aggregates.Profile;
+import com.backendsems.Profile.domain.model.commands.UpdateProfileCommand;
+import com.backendsems.Profile.domain.model.services.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +24,8 @@ public class ProfileController {
      * Obtiene el perfil del usuario.
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getProfile(@PathVariable Long userId) {
-        User profile = profileService.getProfile(userId);
+    public ResponseEntity<Profile> getProfile(@PathVariable Long userId) {
+        Profile profile = profileService.getProfile(userId);
         return ResponseEntity.ok(profile);
     }
 
@@ -33,21 +33,14 @@ public class ProfileController {
      * Actualiza el perfil del usuario.
      */
     @PutMapping("/{userId}")
-    public ResponseEntity<User> updateProfile(
+    public ResponseEntity<Profile> updateProfile(
             @PathVariable Long userId,
             @RequestBody UpdateProfileCommand command
     ) {
-        // Crear nuevo command con el userId del path parameter
-        UpdateProfileCommand commandWithUserId = new UpdateProfileCommand(
-                userId,
-                command.firstName(),
-                command.lastName(),
-                command.address(),
-                command.phoneNumber(),
-                command.profilePhotoUrl()
-        );
-        User updatedUser = profileService.updateProfile(commandWithUserId);
-        return ResponseEntity.ok(updatedUser);
+        // Asignar el userId del path parameter
+        command.setUserId(userId);
+        Profile updatedProfile = profileService.updateProfile(command);
+        return ResponseEntity.ok(updatedProfile);
     }
 
     /**
