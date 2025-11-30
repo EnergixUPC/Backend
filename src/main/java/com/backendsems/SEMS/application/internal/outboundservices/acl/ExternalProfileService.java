@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.application.internal.outboundservices.acl;
 
-import com.backendsems.Profile.interfaces.acl.ProfilesContextFacade;
+import com.backendsems.profiles.interfaces.acl.ProfilesContextFacade;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import org.springframework.stereotype.Service;
 

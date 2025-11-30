@@ -1,7 +1,7 @@
-package com.backendsems.Profile.interfaces.rest.transform;
+package com.backendsems.profiles.interfaces.rest.transform;
 
-import com.backendsems.Profile.domain.model.commands.CreateProfileCommand;
-import com.backendsems.Profile.interfaces.rest.resources.CreateProfileResource;
+import com.backendsems.profiles.domain.model.commands.CreateProfileCommand;
+import com.backendsems.profiles.interfaces.rest.resources.CreateProfileResource;
 
 /**
  * Assembler to convert a CreateProfileResource to a CreateProfileCommand.

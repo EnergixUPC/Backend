@@ -1,6 +1,6 @@
-package com.backendsems.Profile.infrastructure.repositories.jpa.repositories;
+package com.backendsems.profiles.infrastructure.repositories.jpa.repositories;
 
-import com.backendsems.Profile.domain.model.aggregates.Profile;
+import com.backendsems.profiles.domain.model.aggregates.Profile;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

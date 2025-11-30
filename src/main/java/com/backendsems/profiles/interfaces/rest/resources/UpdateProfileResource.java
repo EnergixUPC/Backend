@@ -1,9 +1,9 @@
 package com.backendsems.profiles.interfaces.rest.resources;
 
 /**
- * ProfileResource
+ * UpdateProfileResource
  */
-public record ProfileResource(
+public record UpdateProfileResource(
         Long id,
         String firstName,
         String lastName,

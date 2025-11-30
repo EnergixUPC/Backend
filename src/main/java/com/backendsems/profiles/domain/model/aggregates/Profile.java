@@ -1,22 +1,16 @@
-package com.backendsems.Profile.domain.model.aggregates;
+package com.backendsems.profiles.domain.model.aggregates;
 
-import com.backendsems.Profile.domain.model.commands.CreateProfileCommand;
-import com.backendsems.Profile.domain.model.valueobjects.Address;
-import com.backendsems.Profile.domain.model.valueobjects.EmailAddress;
-import com.backendsems.Profile.domain.model.valueobjects.PersonName;
-import com.backendsems.Profile.domain.model.valueobjects.PhoneNumber;
+import com.backendsems.profiles.domain.model.valueobjects.Address;
+import com.backendsems.profiles.domain.model.valueobjects.EmailAddress;
+import com.backendsems.profiles.domain.model.valueobjects.PersonName;
+import com.backendsems.profiles.domain.model.valueobjects.PhoneNumber;
 import com.backendsems.shared.domain.model.entities.AuditableModel;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * Profile Aggregate
  */
 @Entity
-@Table(name = "profiles")
-@Getter
-@Setter
 public class Profile extends AuditableModel {
     @Embedded
     private PersonName name;
@@ -48,14 +42,46 @@ public class Profile extends AuditableModel {
         this.address = address;
     }
 
-    public static Profile create(CreateProfileCommand command) {
+    public PersonName getName() {
+        return name;
+    }
+
+    public PersonName getLastName() {
+        return lastName;
+    }
+
+    public EmailAddress getEmail() {
+        return email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public PhoneNumber getPhone() {
+        return phone;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void update(com.backendsems.profiles.domain.model.commands.UpdateProfileCommand command) {
+        this.name = command.name();
+        this.lastName = command.lastName();
+        this.email = command.email();
+        this.phone = command.phone();
+        this.address = command.address();
+    }
+
+    public static Profile create(com.backendsems.profiles.domain.model.commands.CreateProfileCommand command) {
         return new Profile(
-                new PersonName(command.name()),
-                new PersonName(command.lastName()),
-                new EmailAddress(command.email()),
+                new com.backendsems.profiles.domain.model.valueobjects.PersonName(command.name()),
+                new com.backendsems.profiles.domain.model.valueobjects.PersonName(command.lastName()),
+                new com.backendsems.profiles.domain.model.valueobjects.EmailAddress(command.email()),
                 command.password(),
-                new PhoneNumber(command.phone()),
-                new Address(command.address())
+                new com.backendsems.profiles.domain.model.valueobjects.PhoneNumber(command.phone()),
+                new com.backendsems.profiles.domain.model.valueobjects.Address(command.address())
         );
     }
 }

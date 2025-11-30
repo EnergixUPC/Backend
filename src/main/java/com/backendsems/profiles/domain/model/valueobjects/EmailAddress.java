@@ -1,4 +1,4 @@
-package com.backendsems.Profile.domain.model.valueobjects;
+package com.backendsems.profiles.domain.model.valueobjects;
 
 import java.util.regex.Pattern;
 

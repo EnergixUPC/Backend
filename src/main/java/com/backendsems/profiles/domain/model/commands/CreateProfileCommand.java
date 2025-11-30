@@ -1,4 +1,4 @@
-package com.backendsems.Profile.domain.model.commands;
+package com.backendsems.profiles.domain.model.commands;
 
 /**
  * CreateProfileCommand

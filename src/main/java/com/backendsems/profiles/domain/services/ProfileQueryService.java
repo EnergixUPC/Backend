@@ -1,9 +1,9 @@
-package com.backendsems.Profile.domain.services;
+package com.backendsems.profiles.domain.services;
 
-import com.backendsems.Profile.domain.model.aggregates.Profile;
-import com.backendsems.Profile.domain.model.queries.GetAllProfilesQuery;
-import com.backendsems.Profile.domain.model.queries.GetProfileByEmailQuery;
-import com.backendsems.Profile.domain.model.queries.GetProfileByIdQuery;
+import com.backendsems.profiles.domain.model.aggregates.Profile;
+import com.backendsems.profiles.domain.model.queries.GetAllProfilesQuery;
+import com.backendsems.profiles.domain.model.queries.GetProfileByEmailQuery;
+import com.backendsems.profiles.domain.model.queries.GetProfileByIdQuery;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,4 +1,4 @@
-package com.backendsems.Profile.interfaces.rest.resources;
+package com.backendsems.profiles.interfaces.rest.resources;
 
 /**
  * CreateProfileResource

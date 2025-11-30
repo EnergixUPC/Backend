@@ -1,7 +1,7 @@
-package com.backendsems.Profile.interfaces.rest.transform;
+package com.backendsems.profiles.interfaces.rest.transform;
 
-import com.backendsems.Profile.domain.model.aggregates.Profile;
-import com.backendsems.Profile.interfaces.rest.resources.ProfileResource;
+import com.backendsems.profiles.domain.model.aggregates.Profile;
+import com.backendsems.profiles.interfaces.rest.resources.ProfileResource;
 
 /**
  * ProfileResourceFromEntityAssembler

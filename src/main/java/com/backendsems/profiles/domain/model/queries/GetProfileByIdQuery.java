@@ -1,4 +1,4 @@
-package com.backendsems.Profile.domain.model.queries;
+package com.backendsems.profiles.domain.model.queries;
 
 /**
  * GetProfileByIdQuery

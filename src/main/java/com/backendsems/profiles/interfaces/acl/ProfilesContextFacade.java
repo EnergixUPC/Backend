@@ -1,4 +1,4 @@
-package com.backendsems.Profile.interfaces.acl;
+package com.backendsems.profiles.interfaces.acl;
 
 /**
  * ProfilesContextFacade
