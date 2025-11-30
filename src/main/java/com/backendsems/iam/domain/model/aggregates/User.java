@@ -14,11 +14,9 @@ import java.util.Set;
 /**
  * User Aggregate Root - Agregado raíz para usuarios
  */
-@Entity
-@Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
+@Entity
 public class User extends AuditableAbstractAggregateRoot<User> {
 
     @Id

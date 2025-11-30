@@ -39,9 +39,8 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
     }
 
     @Override
-    public Long handle(AddDeviceCommand command) {
+    public Long handle(AddDeviceCommand command, UserId userId) {
         // Crear aggregate Device
-        UserId userId = new UserId(Long.parseLong(command.userId()));
         Device device = Device.create(command, userId);
 
         // Save device via repository

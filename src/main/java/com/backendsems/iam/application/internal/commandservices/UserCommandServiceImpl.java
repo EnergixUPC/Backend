@@ -8,6 +8,9 @@ import com.backendsems.iam.domain.model.commands.SignUpCommand;
 import com.backendsems.iam.domain.services.UserCommandService;
 import com.backendsems.iam.infrastructure.persistence.jpa.repositories.RoleRepository;
 import com.backendsems.iam.infrastructure.persistence.jpa.repositories.UserRepository;
+import com.backendsems.iam.domain.model.entities.Role;
+import com.backendsems.iam.domain.model.valueobjects.Roles;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +36,16 @@ public class UserCommandServiceImpl implements UserCommandService {
         this.hashingService = hashingService;
         this.tokenService = tokenService;
         this.roleRepository = roleRepository;
+    }
+
+    @PostConstruct
+    public void initRoles() {
+        if (!roleRepository.existsByName(Roles.ROLE_ADMIN)) {
+            roleRepository.save(new Role(Roles.ROLE_ADMIN, "Administrator role"));
+        }
+        if (!roleRepository.existsByName(Roles.ROLE_USER)) {
+            roleRepository.save(new Role(Roles.ROLE_USER, "User role"));
+        }
     }
 
     /**

@@ -3,6 +3,10 @@ package com.backendsems.SEMS.domain.model.aggregates;
 import com.backendsems.SEMS.domain.model.valueobjects.DeviceId;
 import com.backendsems.SEMS.domain.model.valueobjects.NotificationId;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -11,11 +15,19 @@ import java.util.UUID;
  * Notification Aggregate Root
  * Representa el agregado de notificación en el dominio.
  */
+@Entity
 public class Notification {
 
+    @Id
+    @AttributeOverride(name = "value", column = @Column(name = "notification_id"))
     private NotificationId id;
+    
+    @AttributeOverride(name = "value", column = @Column(name = "device_id"))
     private DeviceId deviceId;
+    
+    @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     private UserId userId;
+    
     private String message;
     private String type;
     private LocalDateTime timestamp;

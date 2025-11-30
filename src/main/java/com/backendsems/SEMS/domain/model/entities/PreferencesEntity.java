@@ -14,6 +14,7 @@ import lombok.Getter;
 @Entity
 public class PreferencesEntity extends AuditableModel {
     @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     @NotNull
     private UserId userId;
 

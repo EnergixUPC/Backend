@@ -4,6 +4,8 @@ import com.backendsems.SEMS.domain.model.commands.DeleteDeviceCommand;
 import com.backendsems.SEMS.domain.model.queries.*;
 import com.backendsems.SEMS.domain.services.DeviceCommandService;
 import com.backendsems.SEMS.domain.services.DeviceQueryService;
+import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
+import com.backendsems.profiles.interfaces.acl.ProfilesContextFacade;
 import com.backendsems.SEMS.interfaces.rest.resources.*;
 import com.backendsems.SEMS.interfaces.rest.transform.*;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,30 +32,45 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 public class DevicesController {
     private final DeviceCommandService deviceCommandService;
     private final DeviceQueryService deviceQueryService;
+    private final TokenService tokenService;
+    private final ProfilesContextFacade profilesContextFacade;
 
     /**
      * Constructor
      * @param deviceCommandService Servicio de comandos para dispositivos
      * @param deviceQueryService Servicio de queries para dispositivos
+     * @param tokenService Servicio de tokens
+     * @param profilesContextFacade Fachada de perfiles
      */
-    public DevicesController(DeviceCommandService deviceCommandService, DeviceQueryService deviceQueryService) {
+    public DevicesController(DeviceCommandService deviceCommandService, DeviceQueryService deviceQueryService, TokenService tokenService, ProfilesContextFacade profilesContextFacade) {
         this.deviceCommandService = deviceCommandService;
         this.deviceQueryService = deviceQueryService;
+        this.tokenService = tokenService;
+        this.profilesContextFacade = profilesContextFacade;
     }
 
     /**
      * Crear un nuevo dispositivo
      * @param resource Recurso de creación
+     * @param authHeader Header de autorización
      * @return Recurso del dispositivo creado
      */
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Create a new device", description = "Create a new device")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Device created"),
             @ApiResponse(responseCode = "400", description = "Invalid input")})
-    public ResponseEntity<DeviceResource> createDevice(@RequestBody CreateDeviceResource resource) {
+    public ResponseEntity<DeviceResource> createDevice(@RequestBody CreateDeviceResource resource, @RequestHeader("Authorization") String authHeader) {
+        // Extraer token del header
+        String token = authHeader.replace("Bearer ", "");
+        String email = tokenService.getEmailFromToken(token);
+        Long profileId = profilesContextFacade.fetchProfileIdByEmail(email);
+        if (profileId == null) return ResponseEntity.badRequest().build();
+        var userId = new com.backendsems.SEMS.domain.model.valueobjects.UserId(profileId);
+
         var command = CreateDeviceFromResourceAssembler.toCommand(resource);
-        var deviceId = deviceCommandService.handle(command);
+        var deviceId = deviceCommandService.handle(command, userId);
         if (deviceId == null || deviceId == 0L) return ResponseEntity.badRequest().build();
         var device = deviceQueryService.handle(new GetDeviceByIdQuery(deviceId));
         if (device == null) return ResponseEntity.notFound().build();

@@ -11,6 +11,7 @@ import lombok.Getter;
 @Entity
 public class Device extends AuditableAbstractAggregateRoot<Device> {
     @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     private UserId userId;
 
     @Embedded
@@ -51,13 +52,13 @@ public class Device extends AuditableAbstractAggregateRoot<Device> {
     public static Device create(AddDeviceCommand command, UserId userId) {
         return new Device(
                 userId,
-                new DeviceName(command.nombre()),
-                new DeviceCategory(command.categoria()),
-                new DeviceType(command.tipo()),
-                new DeviceStatus(command.estado()),
-                new DeviceActivity(command.ultimaActividad()),
-                new DeviceLocation(command.ubicacion()),
-                command.activo()
+                new DeviceName(command.name()),
+                new DeviceCategory(command.category()),
+                new DeviceType(command.type()),
+                new DeviceStatus(command.status()),
+                new DeviceActivity(command.lastActivity()),
+                new DeviceLocation(command.location()),
+                command.active()
         );
     }
 

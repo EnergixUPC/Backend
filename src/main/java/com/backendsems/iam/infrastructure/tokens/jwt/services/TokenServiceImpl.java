@@ -1,5 +1,6 @@
 package com.backendsems.iam.infrastructure.tokens.jwt.services;
 
+import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
 import com.backendsems.iam.infrastructure.tokens.jwt.BearerTokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -16,11 +17,11 @@ import java.util.Date;
 /**
  * Bearer Token Service Implementation.
  * <p>
- * This class implements the BearerTokenService interface using JWT.
+ * This class implements the TokenService and BearerTokenService interfaces using JWT.
  * </p>
  */
 @Service
-public class TokenServiceImpl implements BearerTokenService {
+public class TokenServiceImpl implements TokenService, BearerTokenService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TokenServiceImpl.class);
 
@@ -29,6 +30,11 @@ public class TokenServiceImpl implements BearerTokenService {
 
     @Value("${authorization.jwt.expiration}")
     private int jwtExpirationMs;
+
+    @Override
+    public String getEmailFromToken(String token) {
+        return getUsernameFromToken(token);
+    }
 
     @Override
     public String generateToken(String username) {

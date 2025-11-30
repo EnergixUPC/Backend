@@ -16,6 +16,7 @@ import lombok.Getter;
 @Entity
 public class DeviceEntity extends AuditableModel {
     @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     @NotNull
     private UserId userId;
 

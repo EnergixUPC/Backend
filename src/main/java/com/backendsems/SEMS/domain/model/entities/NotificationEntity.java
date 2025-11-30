@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
  */
 @Getter
 @Entity
-
 public class NotificationEntity {
 
     @EmbeddedId
+    @AttributeOverride(name = "value", column = @Column(name = "notification_id"))
     private NotificationId id;
 
     @Embedded
@@ -25,7 +25,7 @@ public class NotificationEntity {
     private DeviceId deviceId;
 
     @Embedded
-    @AttributeOverride(name = "value", column = @Column(name = "user_id"))
+    @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     private UserId userId;
 
     @Column(nullable = false)

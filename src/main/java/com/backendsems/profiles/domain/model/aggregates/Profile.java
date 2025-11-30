@@ -13,21 +13,26 @@ import jakarta.persistence.*;
 @Entity
 public class Profile extends AuditableModel {
     @Embedded
+    @AttributeOverride(name = "name", column = @Column(name = "first_name"))
     private PersonName name;
 
     @Embedded
+    @AttributeOverride(name = "name", column = @Column(name = "last_name"))
     private PersonName lastName;
 
     @Embedded
+    @AttributeOverride(name = "address", column = @Column(name = "email_address"))
     private EmailAddress email;
 
     @Column(nullable = false)
     private String password;
 
     @Embedded
+    @AttributeOverride(name = "number", column = @Column(name = "phone_number"))
     private PhoneNumber phone;
 
     @Embedded
+    @AttributeOverride(name = "address", column = @Column(name = "profile_address"))
     private Address address;
 
     public Profile() {

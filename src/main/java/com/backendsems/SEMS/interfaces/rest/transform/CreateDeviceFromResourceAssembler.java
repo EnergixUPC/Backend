@@ -16,14 +16,13 @@ public class CreateDeviceFromResourceAssembler {
      */
     public static AddDeviceCommand toCommand(CreateDeviceResource resource) {
         return new AddDeviceCommand(
-                resource.userId(),
-                resource.nombre(),
-                resource.categoria(),
-                resource.tipo(),
-                resource.estado(),
-                resource.ultimaActividad(),
-                resource.ubicacion(),
-                resource.activo()
+                resource.name(),
+                resource.category(),
+                resource.type(),
+                resource.status(),
+                resource.lastActivity(),
+                resource.location(),
+                resource.active()
         );
     }
 }
