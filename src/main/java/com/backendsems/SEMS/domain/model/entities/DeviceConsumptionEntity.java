@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
+import java.time.LocalDate;
+
 /**
  * DeviceConsumptionEntity
  * Representa el registro de consumo de un dispositivo, parte del agregado Device.
@@ -25,6 +27,9 @@ public class DeviceConsumptionEntity extends AuditableModel {
     @NotNull
     private String periodo;
 
+    @Column(nullable = true)
+    private LocalDate fecha;
+
     // Constructor público sin parámetros para JPA
     public DeviceConsumptionEntity() {
     }
@@ -34,6 +39,15 @@ public class DeviceConsumptionEntity extends AuditableModel {
         this.device = device;
         this.consumo = consumo;
         this.periodo = periodo;
+        this.fecha = LocalDate.now(); // Valor por defecto
+    }
+
+    // Constructor con fecha específica
+    public DeviceConsumptionEntity(DeviceEntity device, Double consumo, String periodo, LocalDate fecha) {
+        this.device = device;
+        this.consumo = consumo;
+        this.periodo = periodo;
+        this.fecha = fecha != null ? fecha : LocalDate.now();
     }
 
     // Método de negocio para actualizar consumo

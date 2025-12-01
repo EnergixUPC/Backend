@@ -8,10 +8,13 @@ import com.backendsems.SEMS.domain.services.DeviceQueryService;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceConsumptionRepository;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceRepository;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.PreferencesRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 /**
@@ -75,5 +78,35 @@ public class DeviceQueryServiceImpl implements DeviceQueryService {
     @Override
     public List<PreferencesEntity> handle(GetAllPreferencesByUserIdQuery query) {
         return preferencesRepository.findByUserId(query.userId());
+    }
+
+    @Override
+    public List<DeviceConsumptionEntity> handle(GetTopDevicesByUserQuery query) {
+        Pageable pageable = PageRequest.of(0, query.limit());
+        return consumptionRepository.findTopConsumptionByUserIdAndPeriod(query.userId(), query.period(), pageable);
+    }
+
+    @Override
+    public List<DeviceConsumptionEntity> handle(GetWeeklyConsumptionByUserQuery query) {
+        // Obtener la semana actual (de lunes a domingo)
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+        LocalDate weekEnd = weekStart.plusDays(6);
+        
+        // Usar el nuevo método que agrupa por fecha
+        return consumptionRepository.findDailyConsumptionByUserIdAndDateRange(
+            query.userId(), weekStart, weekEnd);
+    }
+
+    @Override
+    public List<Object[]> handleDailySummary(GetWeeklyConsumptionByUserQuery query) {
+        // Obtener la semana actual (de lunes a domingo)
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.with(DayOfWeek.MONDAY);
+        LocalDate weekEnd = weekStart.plusDays(6);
+        
+        // Usar el método que agrupa y suma por día
+        return consumptionRepository.findDailyConsumptionSumByUserIdAndDateRange(
+            query.userId(), weekStart, weekEnd);
     }
 }

@@ -68,4 +68,25 @@ public interface DeviceQueryService {
      * @return Lista de preferencias.
      */
     List<PreferencesEntity> handle(GetAllPreferencesByUserIdQuery query);
+
+    /**
+     * Maneja la query para obtener los dispositivos con mayor consumo de un usuario.
+     * @param query La query GetTopDevicesByUserQuery.
+     * @return Lista de dispositivos con mayor consumo.
+     */
+    List<DeviceConsumptionEntity> handle(GetTopDevicesByUserQuery query);
+
+    /**
+     * Maneja la query para obtener el consumo semanal agregado de un usuario.
+     * @param query La query GetWeeklyConsumptionByUserQuery.
+     * @return Lista de consumos semanales.
+     */
+    List<DeviceConsumptionEntity> handle(GetWeeklyConsumptionByUserQuery query);
+
+    /**
+     * Maneja la query para obtener el consumo diario agrupado de un usuario por fecha.
+     * @param query La query GetWeeklyConsumptionByUserQuery.
+     * @return Lista de objetos con fecha y suma total por día.
+     */
+    List<Object[]> handleDailySummary(GetWeeklyConsumptionByUserQuery query);
 }
