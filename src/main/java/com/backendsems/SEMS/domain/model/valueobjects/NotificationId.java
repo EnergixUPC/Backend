@@ -1,26 +1,16 @@
 package com.backendsems.SEMS.domain.model.valueobjects;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.Embeddable;
 
 /**
- * NotificationId Value Object
- * Representa un identificador único de notificación
+ * NotificationId
+ * Value Object para el ID de una notificación.
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class NotificationId {
-    
-    private Long value;
-    
-    public Long getValue() {
-        return value;
-    }
-    
-    @Override
-    public String toString() {
-        return String.valueOf(value);
+@Embeddable
+public record NotificationId(String value) {
+    public NotificationId {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Notification ID cannot be null or blank");
+        }
     }
 }

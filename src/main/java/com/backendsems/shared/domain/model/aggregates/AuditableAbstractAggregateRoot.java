@@ -7,27 +7,37 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.domain.AbstractAggregateRoot;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
- * Base class for auditable aggregate roots following DDD principles
- * Extends Spring's AbstractAggregateRoot for domain event support
+ * AuditableAbstractAggregateRoot - Clase base para agregados con auditoría
+ * @param <T> the type of the aggregate root
  */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @Getter
-public abstract class AuditableAbstractAggregateRoot<T extends AuditableAbstractAggregateRoot<T>> 
-        extends AbstractAggregateRoot<T> {
-    
+public abstract class AuditableAbstractAggregateRoot<T extends AbstractAggregateRoot<T>> extends AbstractAggregateRoot<T> {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private Date createdAt;
-    
+    private LocalDateTime createdAt;
+
     @LastModifiedDate
     @Column(nullable = false)
-    private Date updatedAt;
+    private LocalDateTime updatedAt;
+
+    @Version
+    private Long version;
+
+    /**
+     * Registers a domain event.
+     * @param event the domain event to register
+     */
+    public void addDomainEvent(Object event) {
+        super.registerEvent(event);
+    }
 }

@@ -3,12 +3,13 @@ package com.backendsems.shared.infrastructure.persistence.jpa.configuration.stra
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import static io.github.encryptorcode.pluralize.Pluralize.pluralize;
 
 /**
  * SnakeCasePhysicalNamingStrategy
  * <p>
  * This class implements the PhysicalNamingStrategy interface to convert database
- * identifiers to snake_case format WITHOUT pluralization to avoid table duplication.
+ * identifiers to snake_case format WITH pluralization.
  */
 public class SnakeCaseWithPluralizedTablePhysicalNamingStrategy implements PhysicalNamingStrategy {
     
@@ -30,11 +31,11 @@ public class SnakeCaseWithPluralizedTablePhysicalNamingStrategy implements Physi
 
     /**
      * Converts a given Identifier to snake_case format for table names.
-     * PLURALIZATION DISABLED - Uses explicit @Table names to avoid duplication.
+     * Uses pluralization for table names.
      */
     @Override
     public Identifier toPhysicalTableName(Identifier identifier, JdbcEnvironment jdbcEnvironment) {
-        return this.toSnakeCase(identifier);
+        return this.toSnakeCase(Identifier.toIdentifier(pluralize(identifier.getText())));
     }
 
     /**

@@ -1,26 +1,15 @@
 package com.backendsems.SEMS.domain.model.valueobjects;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.Embeddable;
 
 /**
  * UserId Value Object
- * Representa un identificador único de usuario
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserId {
-    
-    private Long value;
-    
-    public Long getValue() {
-        return value;
-    }
-    
-    @Override
-    public String toString() {
-        return String.valueOf(value);
+@Embeddable
+public record UserId(Long id) {
+    public UserId {
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("User ID must be a positive number");
+        }
     }
 }

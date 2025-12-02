@@ -1,34 +1,16 @@
 package com.backendsems.SEMS.domain.model.commands;
 
-import com.backendsems.SEMS.domain.model.aggregates.NotificationAggregate;
+import com.backendsems.SEMS.domain.model.valueobjects.DeviceId;
+import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 
 /**
- * Command para crear una nueva Notification Aggregate
+ * CreateNotificationCommand
+ * Comando para crear una nueva notificación.
  */
 public record CreateNotificationCommand(
-        String title,
+        DeviceId deviceId,
+        UserId userId,
         String message,
-        NotificationAggregate.NotificationType type,
-        Long userId
+        String type
 ) {
-    /**
-     * Constructor que incluye validaciones
-     */
-    public CreateNotificationCommand {
-        if (title == null || title.trim().isEmpty()) {
-            throw new IllegalArgumentException("Título de la notificación es requerido");
-        }
-        
-        if (message == null || message.trim().isEmpty()) {
-            throw new IllegalArgumentException("Mensaje de la notificación es requerido");
-        }
-        
-        if (type == null) {
-            throw new IllegalArgumentException("Tipo de notificación es requerido");
-        }
-        
-        if (userId == null || userId <= 0) {
-            throw new IllegalArgumentException("ID de usuario válido es requerido");
-        }
-    }
 }

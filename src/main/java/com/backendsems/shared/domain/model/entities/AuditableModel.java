@@ -8,23 +8,20 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.Date;
 
-/**
- * Base class for auditable entities
- * Provides automatic auditing for creation and modification dates
- */
-@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
-@Getter
-public abstract class AuditableModel {
-    
+@MappedSuperclass
+public class AuditableModel {
     @Id
+    @Getter
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    @Getter
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private Date createdAt;
-    
+
+    @Getter
     @LastModifiedDate
     @Column(nullable = false)
     private Date updatedAt;

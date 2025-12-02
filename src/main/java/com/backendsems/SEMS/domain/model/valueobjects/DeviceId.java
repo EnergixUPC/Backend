@@ -1,26 +1,15 @@
 package com.backendsems.SEMS.domain.model.valueobjects;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.persistence.Embeddable;
 
 /**
  * DeviceId Value Object
- * Representa un identificador único de dispositivo
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class DeviceId {
-    
-    private Long value;
-    
-    public Long getValue() {
-        return value;
-    }
-    
-    @Override
-    public String toString() {
-        return String.valueOf(value);
+@Embeddable
+public record DeviceId(Long value) {
+    public DeviceId {
+        if (value == null || value <= 0) {
+            throw new IllegalArgumentException("Device ID must be a positive number");
+        }
     }
 }
