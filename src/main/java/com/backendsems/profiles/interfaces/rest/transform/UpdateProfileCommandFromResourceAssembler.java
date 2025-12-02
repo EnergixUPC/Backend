@@ -23,7 +23,8 @@ public class UpdateProfileCommandFromResourceAssembler {
                 new PersonName(resource.lastName()),
                 new EmailAddress(resource.email()),
                 new PhoneNumber(resource.phone()),
-                new Address(resource.address())
+                new Address(resource.address()),
+                resource.profilePhotoUrl()
         );
     }
 }

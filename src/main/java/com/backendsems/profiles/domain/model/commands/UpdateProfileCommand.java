@@ -15,6 +15,7 @@ public record UpdateProfileCommand(
         PersonName lastName,
         EmailAddress email,
         PhoneNumber phone,
-        Address address
+        Address address,
+        String profilePhotoUrl
 ) {
 }

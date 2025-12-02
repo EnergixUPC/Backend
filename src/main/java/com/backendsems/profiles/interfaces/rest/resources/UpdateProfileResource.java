@@ -2,6 +2,7 @@ package com.backendsems.profiles.interfaces.rest.resources;
 
 /**
  * UpdateProfileResource
+ * Resource para actualizar perfil del usuario
  */
 public record UpdateProfileResource(
         Long id,
@@ -9,6 +10,7 @@ public record UpdateProfileResource(
         String lastName,
         String email,
         String phone,
-        String address
+        String address,
+        String profilePhotoUrl
 ) {
 }

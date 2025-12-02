@@ -5,6 +5,7 @@ import com.backendsems.profiles.interfaces.rest.resources.ProfileResource;
 
 /**
  * ProfileResourceFromEntityAssembler
+ * Convierte Profile a ProfileResource (sin exponer password)
  */
 public class ProfileResourceFromEntityAssembler {
     public static ProfileResource toResourceFromEntity(Profile profile) {
@@ -14,7 +15,8 @@ public class ProfileResourceFromEntityAssembler {
                 profile.getLastName().name(),
                 profile.getEmail().address(),
                 profile.getPhone().number(),
-                profile.getAddress().address()
+                profile.getAddress().address(),
+                profile.getProfilePhotoUrl()
         );
     }
 }
