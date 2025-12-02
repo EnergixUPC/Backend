@@ -4,11 +4,8 @@ import com.backendsems.SEMS.domain.model.aggregates.Device;
 import com.backendsems.SEMS.domain.model.commands.AddDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.DeleteDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.UpdatePreferencesCommand;
-import com.backendsems.SEMS.domain.model.entities.DeviceConsumptionEntity;
-import com.backendsems.SEMS.domain.model.entities.DeviceEntity;
-import com.backendsems.SEMS.domain.model.entities.PreferencesEntity;
-import com.backendsems.SEMS.domain.model.events.DeviceAddedEvent;
-import com.backendsems.SEMS.domain.model.events.DeviceConsumptionCalculatedEvent;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
+import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.exceptions.DeviceNotFoundException;
 import com.backendsems.SEMS.domain.exceptions.PreferencesNotFoundException;
 import com.backendsems.SEMS.domain.services.DeviceCommandService;
@@ -44,14 +41,13 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
         Device device = Device.create(command, userId);
 
         // Save device via repository
-        DeviceEntity deviceEntity = DeviceEntity.fromAggregate(device);
-        deviceRepository.save(deviceEntity);
-        Long deviceId = deviceEntity.getId();
+        device = deviceRepository.save(device);
+        Long deviceId = device.getId();
 
         // Calcular consumo
-        DeviceConsumptionEntity daily = calculationService.createDailyConsumption(deviceEntity, device);
-        DeviceConsumptionEntity weekly = calculationService.createWeeklyConsumption(deviceEntity, device);
-        DeviceConsumptionEntity monthly = calculationService.createMonthlyConsumption(deviceEntity, device);
+        DeviceConsumption daily = calculationService.createDailyConsumption(device);
+        DeviceConsumption weekly = calculationService.createWeeklyConsumption(device);
+        DeviceConsumption monthly = calculationService.createMonthlyConsumption(device);
         consumptionRepository.save(daily);
         consumptionRepository.save(weekly);
         consumptionRepository.save(monthly);
@@ -66,10 +62,10 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
     @Override
     public void handle(UpdatePreferencesCommand command) {
         Long deviceId = command.deviceId();
-        DeviceEntity device = deviceRepository.findById(deviceId)
+        Device device = deviceRepository.findById(deviceId)
                 .orElseThrow(() -> new DeviceNotFoundException(deviceId));
         UserId userId = device.getUserId();
-        PreferencesEntity preferences = preferencesRepository.findByUserIdAndDeviceId(userId, deviceId)
+        DevicePreference preferences = preferencesRepository.findByUserIdAndDeviceId(userId, deviceId)
                 .orElseThrow(() -> new PreferencesNotFoundException(userId, deviceId));
 
         preferences.updateHabilitarMonitoreoEnergia(command.habilitarMonitoreoEnergia());

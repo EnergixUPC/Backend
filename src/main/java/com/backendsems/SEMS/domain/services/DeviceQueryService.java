@@ -1,8 +1,8 @@
 package com.backendsems.SEMS.domain.services;
 
 import com.backendsems.SEMS.domain.model.aggregates.Device;
-import com.backendsems.SEMS.domain.model.entities.DeviceConsumptionEntity;
-import com.backendsems.SEMS.domain.model.entities.PreferencesEntity;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
+import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.model.queries.*;
 
 import java.util.List;
@@ -46,14 +46,14 @@ public interface DeviceQueryService {
      * @param query La query GetDeviceConsumptionByDeviceIdQuery.
      * @return Lista de consumos.
      */
-    List<DeviceConsumptionEntity> handle(GetDeviceConsumptionByDeviceIdQuery query);
+    List<DeviceConsumption> handle(GetDeviceConsumptionByDeviceIdQuery query);
 
     /**
      * Maneja la query para obtener preferencias por userId y deviceId.
      * @param query La query GetPreferencesByUserIdAndDeviceIdQuery.
      * @return Las preferencias, o null si no existen.
      */
-    PreferencesEntity handle(GetPreferencesByUserIdAndDeviceIdQuery query);
+    DevicePreference handle(GetPreferencesByUserIdAndDeviceIdQuery query);
 
     /**
      * Maneja la query para verificar si existen preferencias.
@@ -67,21 +67,21 @@ public interface DeviceQueryService {
      * @param query La query GetAllPreferencesByUserIdQuery.
      * @return Lista de preferencias.
      */
-    List<PreferencesEntity> handle(GetAllPreferencesByUserIdQuery query);
+    List<DevicePreference> handle(GetAllPreferencesByUserIdQuery query);
 
     /**
      * Maneja la query para obtener los dispositivos con mayor consumo de un usuario.
      * @param query La query GetTopDevicesByUserQuery.
      * @return Lista de dispositivos con mayor consumo.
      */
-    List<DeviceConsumptionEntity> handle(GetTopDevicesByUserQuery query);
+    List<DeviceConsumption> handle(GetTopDevicesByUserQuery query);
 
     /**
      * Maneja la query para obtener el consumo semanal agregado de un usuario.
      * @param query La query GetWeeklyConsumptionByUserQuery.
      * @return Lista de consumos semanales.
      */
-    List<DeviceConsumptionEntity> handle(GetWeeklyConsumptionByUserQuery query);
+    List<DeviceConsumption> handle(GetWeeklyConsumptionByUserQuery query);
 
     /**
      * Maneja la query para obtener el consumo diario agrupado de un usuario por fecha.

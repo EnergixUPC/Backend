@@ -1,7 +1,6 @@
 package com.backendsems.SEMS.domain.model.aggregates;
 
 import com.backendsems.SEMS.domain.model.commands.AddDeviceCommand;
-import com.backendsems.SEMS.domain.model.entities.DeviceEntity;
 import com.backendsems.SEMS.domain.model.valueobjects.*;
 import com.backendsems.shared.domain.model.aggregates.AuditableAbstractAggregateRoot;
 import jakarta.persistence.*;
@@ -59,19 +58,6 @@ public class Device extends AuditableAbstractAggregateRoot<Device> {
                 new DeviceActivity(command.lastActivity()),
                 new DeviceLocation(command.location()),
                 command.active()
-        );
-    }
-
-    public static Device fromEntity(DeviceEntity entity) {
-        return new Device(
-                entity.getUserId(),
-                entity.getName(),
-                entity.getCategory(),
-                entity.getType(),
-                entity.getStatus(),
-                entity.getActivity(),
-                entity.getLocation(),
-                entity.isActivo()
         );
     }
 

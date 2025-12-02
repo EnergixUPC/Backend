@@ -1,8 +1,7 @@
 package com.backendsems.SEMS.domain.services;
 
 import com.backendsems.SEMS.domain.model.aggregates.Device;
-import com.backendsems.SEMS.domain.model.entities.DeviceConsumptionEntity;
-import com.backendsems.SEMS.domain.model.entities.DeviceEntity;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
 
 /**
  * DeviceConsumptionCalculationService
@@ -33,25 +32,22 @@ public interface DeviceConsumptionCalculationService {
 
     /**
      * Crea una entidad de consumo diario.
-     * @param deviceEntity La entidad del dispositivo.
-     * @param device El aggregate para cálculo.
-     * @return DeviceConsumptionEntity para diario.
+     * @param device El aggregate Device.
+     * @return DeviceConsumption para diario.
      */
-    DeviceConsumptionEntity createDailyConsumption(DeviceEntity deviceEntity, Device device);
+    DeviceConsumption createDailyConsumption(Device device);
 
     /**
      * Crea una entidad de consumo semanal.
-     * @param deviceEntity La entidad del dispositivo.
-     * @param device El aggregate para cálculo.
-     * @return DeviceConsumptionEntity para semanal.
+     * @param device El aggregate Device.
+     * @return DeviceConsumption para semanal.
      */
-    DeviceConsumptionEntity createWeeklyConsumption(DeviceEntity deviceEntity, Device device);
+    DeviceConsumption createWeeklyConsumption(Device device);
 
     /**
      * Crea una entidad de consumo mensual.
-     * @param deviceEntity La entidad del dispositivo.
-     * @param device El aggregate para cálculo.
-     * @return DeviceConsumptionEntity para mensual.
+     * @param device El aggregate Device.
+     * @return DeviceConsumption para mensual.
      */
-    DeviceConsumptionEntity createMonthlyConsumption(DeviceEntity deviceEntity, Device device);
+    DeviceConsumption createMonthlyConsumption(Device device);
 }

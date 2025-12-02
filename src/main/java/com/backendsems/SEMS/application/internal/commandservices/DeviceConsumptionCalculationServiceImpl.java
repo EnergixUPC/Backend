@@ -1,8 +1,7 @@
 package com.backendsems.SEMS.application.internal.commandservices;
 
 import com.backendsems.SEMS.domain.model.aggregates.Device;
-import com.backendsems.SEMS.domain.model.entities.DeviceConsumptionEntity;
-import com.backendsems.SEMS.domain.model.entities.DeviceEntity;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
 import com.backendsems.SEMS.domain.services.DeviceConsumptionCalculationService;
 import org.springframework.stereotype.Service;
 
@@ -38,20 +37,20 @@ public class DeviceConsumptionCalculationServiceImpl implements DeviceConsumptio
     }
 
     @Override
-    public DeviceConsumptionEntity createDailyConsumption(DeviceEntity deviceEntity, Device device) {
+    public DeviceConsumption createDailyConsumption(Device device) {
         Double consumo = calculateDailyConsumption(device);
-        return new DeviceConsumptionEntity(deviceEntity, consumo, "daily", LocalDate.now());
+        return new DeviceConsumption(device, consumo, "daily", LocalDate.now());
     }
 
     @Override
-    public DeviceConsumptionEntity createWeeklyConsumption(DeviceEntity deviceEntity, Device device) {
+    public DeviceConsumption createWeeklyConsumption(Device device) {
         Double consumo = calculateWeeklyConsumption(device);
-        return new DeviceConsumptionEntity(deviceEntity, consumo, "weekly", LocalDate.now());
+        return new DeviceConsumption(device, consumo, "weekly", LocalDate.now());
     }
 
     @Override
-    public DeviceConsumptionEntity createMonthlyConsumption(DeviceEntity deviceEntity, Device device) {
+    public DeviceConsumption createMonthlyConsumption(Device device) {
         Double consumo = calculateMonthlyConsumption(device);
-        return new DeviceConsumptionEntity(deviceEntity, consumo, "monthly", LocalDate.now());
+        return new DeviceConsumption(device, consumo, "monthly", LocalDate.now());
     }
 }

@@ -1,7 +1,7 @@
 package com.backendsems.SEMS.application.internal.eventhandlers;
 
-import com.backendsems.SEMS.domain.model.entities.DeviceEntity;
-import com.backendsems.SEMS.domain.model.entities.PreferencesEntity;
+import com.backendsems.SEMS.domain.model.aggregates.Device;
+import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.model.events.DeviceAddedEvent;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceRepository;
@@ -38,13 +38,13 @@ public class DeviceAddedEventHandler {
         }
 
         // Get device
-        DeviceEntity device = deviceRepository.findById(deviceId).orElse(null);
+        Device device = deviceRepository.findById(deviceId).orElse(null);
         if (device == null) {
             return; // Device not found, perhaps log error
         }
 
         // Create default preferences
-        PreferencesEntity preferences = new PreferencesEntity(userId, device, 100.0, true,
+        DevicePreference preferences = new DevicePreference(userId, device, 100.0, true,
                 false, false, false, false, false, false, false, false, false, false, false, false); // Default false for all booleans
 
         preferencesRepository.save(preferences);

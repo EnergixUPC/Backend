@@ -1,5 +1,6 @@
 package com.backendsems.SEMS.domain.model.entities;
 
+import com.backendsems.SEMS.domain.model.aggregates.Device;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.shared.domain.model.entities.AuditableModel;
 import jakarta.persistence.*;
@@ -7,12 +8,13 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 /**
- * PreferencesEntity
- * Representa las preferencias de un usuario para un dispositivo específico.
+ * DevicePreference
+ * Entity dependiente que representa las preferencias de un usuario para un dispositivo específico.
+ * Contiene Foreign Key hacia el aggregate Device.
  */
 @Getter
 @Entity
-public class PreferencesEntity extends AuditableModel {
+public class DevicePreference extends AuditableModel {
     @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     @NotNull
@@ -20,7 +22,7 @@ public class PreferencesEntity extends AuditableModel {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "device_id", nullable = false)
-    private DeviceEntity device;
+    private Device device;
 
     @Column(nullable = false)
     @NotNull
@@ -70,11 +72,11 @@ public class PreferencesEntity extends AuditableModel {
     private boolean alertasDispositivosDesconectados;
 
     // Constructor público sin parámetros para JPA
-    public PreferencesEntity() {
+    public DevicePreference() {
     }
 
     // Constructor para creación controlada
-    public PreferencesEntity(UserId userId, DeviceEntity device, Double threshold, boolean notificationEnabled,
+    public DevicePreference(UserId userId, Device device, Double threshold, boolean notificationEnabled,
                              boolean habilitarMonitoreoEnergia, boolean recibirAlertasAltoConsumo,
                              boolean monitorearCalefaccionRefrigeracion, boolean monitorearElectrodomesticosPrincipales,
                              boolean monitorearElectronicos, boolean monitorearDispositivosCocina,

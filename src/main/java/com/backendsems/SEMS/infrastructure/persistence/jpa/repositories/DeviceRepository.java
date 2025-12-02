@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.infrastructure.persistence.jpa.repositories;
 
-import com.backendsems.SEMS.domain.model.entities.DeviceEntity;
+import com.backendsems.SEMS.domain.model.aggregates.Device;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,17 +9,17 @@ import java.util.List;
 
 /**
  * DeviceRepository
- * Repositorio JPA para DeviceEntity.
+ * Repositorio JPA para el aggregate Device.
  */
 @Repository
-public interface DeviceRepository extends JpaRepository<DeviceEntity, Long> {
+public interface DeviceRepository extends JpaRepository<Device, Long> {
 
     /**
      * Encuentra dispositivos por userId.
      * @param userId El ID del usuario.
      * @return Lista de dispositivos.
      */
-    List<DeviceEntity> findByUserId(UserId userId);
+    List<Device> findByUserId(UserId userId);
 
     /**
      * Verifica si existe un dispositivo por ID.

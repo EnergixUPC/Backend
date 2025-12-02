@@ -1,8 +1,8 @@
 package com.backendsems.SEMS.application.internal.queryservices;
 
 import com.backendsems.SEMS.domain.model.aggregates.Device;
-import com.backendsems.SEMS.domain.model.entities.DeviceConsumptionEntity;
-import com.backendsems.SEMS.domain.model.entities.PreferencesEntity;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
+import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.model.queries.*;
 import com.backendsems.SEMS.domain.services.DeviceQueryService;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceConsumptionRepository;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * DeviceQueryServiceImpl
@@ -36,23 +35,18 @@ public class DeviceQueryServiceImpl implements DeviceQueryService {
 
     @Override
     public List<Device> handle(GetAllDevicesQuery query) {
-        return deviceRepository.findAll().stream()
-                .map(Device::fromEntity)
-                .collect(Collectors.toList());
+        return deviceRepository.findAll();
     }
 
     @Override
     public Device handle(GetDeviceByIdQuery query) {
         return deviceRepository.findById(query.deviceId())
-                .map(Device::fromEntity)
                 .orElse(null);
     }
 
     @Override
     public List<Device> handle(GetDevicesByUserIdQuery query) {
-        return deviceRepository.findByUserId(query.userId()).stream()
-                .map(Device::fromEntity)
-                .collect(Collectors.toList());
+        return deviceRepository.findByUserId(query.userId());
     }
 
     @Override
@@ -61,12 +55,12 @@ public class DeviceQueryServiceImpl implements DeviceQueryService {
     }
 
     @Override
-    public List<DeviceConsumptionEntity> handle(GetDeviceConsumptionByDeviceIdQuery query) {
+    public List<DeviceConsumption> handle(GetDeviceConsumptionByDeviceIdQuery query) {
         return consumptionRepository.findByDeviceId(query.deviceId());
     }
 
     @Override
-    public PreferencesEntity handle(GetPreferencesByUserIdAndDeviceIdQuery query) {
+    public DevicePreference handle(GetPreferencesByUserIdAndDeviceIdQuery query) {
         return preferencesRepository.findByUserIdAndDeviceId(query.userId(), query.deviceId()).orElse(null);
     }
 
@@ -76,18 +70,18 @@ public class DeviceQueryServiceImpl implements DeviceQueryService {
     }
 
     @Override
-    public List<PreferencesEntity> handle(GetAllPreferencesByUserIdQuery query) {
+    public List<DevicePreference> handle(GetAllPreferencesByUserIdQuery query) {
         return preferencesRepository.findByUserId(query.userId());
     }
 
     @Override
-    public List<DeviceConsumptionEntity> handle(GetTopDevicesByUserQuery query) {
+    public List<DeviceConsumption> handle(GetTopDevicesByUserQuery query) {
         Pageable pageable = PageRequest.of(0, query.limit());
         return consumptionRepository.findTopConsumptionByUserIdAndPeriod(query.userId(), query.period(), pageable);
     }
 
     @Override
-    public List<DeviceConsumptionEntity> handle(GetWeeklyConsumptionByUserQuery query) {
+    public List<DeviceConsumption> handle(GetWeeklyConsumptionByUserQuery query) {
         // Obtener la semana actual (de lunes a domingo)
         LocalDate today = LocalDate.now();
         LocalDate weekStart = today.with(DayOfWeek.MONDAY);
