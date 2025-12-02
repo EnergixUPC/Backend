@@ -1,7 +1,7 @@
 package com.backendsems.SEMS.application.internal.queryservices;
 
-import com.backendsems.SEMS.domain.model.entities.DeviceConsumptionEntity;
-import com.backendsems.SEMS.domain.model.entities.PreferencesEntity;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
+import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.model.queries.GetAllPreferencesByUserIdQuery;
 import com.backendsems.SEMS.domain.model.queries.GetDevicesByUserIdQuery;
 import com.backendsems.SEMS.domain.model.queries.GetDashboardByUserIdQuery;
@@ -205,7 +205,7 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
         return v != null ? v.toString() : "Unknown";
     }
 
-    private Instant extractTimestamp(DeviceConsumptionEntity e) {
+    private Instant extractTimestamp(DeviceConsumption e) {
         Object v = invokeFirst(e,
                 "getTimestamp", "getOccurredAt", "getRecordedAt", "getCreatedAt", "getDateTime", "getDate");
         if (v instanceof Instant) return (Instant) v;
@@ -215,34 +215,34 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
         return null;
     }
 
-    private double extractKwh(DeviceConsumptionEntity e) {
+    private double extractKwh(DeviceConsumption e) {
         Object v = invokeFirst(e,
                 "getKwh", "getConsumption", "getEnergy", "getValue", "getAmount");
         if (v instanceof Number) return ((Number) v).doubleValue();
         return 0.0;
     }
 
-    private String extractDeviceCategory(List<DeviceConsumptionEntity> list, DeviceConsumptionEntity e) {
+    private String extractDeviceCategory(List<DeviceConsumption> list, DeviceConsumption e) {
         Object v = invokeFirst(e,
                 "getDeviceCategory", "getCategory", "deviceCategory", "category");
         return v != null ? v.toString() : null;
     }
 
-    private double extractMonthlyGoal(PreferencesEntity p) {
+    private double extractMonthlyGoal(DevicePreference p) {
         Object v = invokeFirst(p,
                 "getMonthlySavingGoalKwh", "getMonthlySavingGoal", "getSavingGoal", "getGoalKwh", "getGoal");
         if (v instanceof Number) return ((Number) v).doubleValue();
         return 0.0;
     }
 
-    private double extractPricePerKwh(PreferencesEntity p) {
+    private double extractPricePerKwh(DevicePreference p) {
         Object v = invokeFirst(p,
                 "getPricePerKwh", "getEnergyPrice", "getTariff", "getPrice");
         if (v instanceof Number) return ((Number) v).doubleValue();
         return 0.0;
     }
 
-    private int extractAutoOffHour(PreferencesEntity p) {
+    private int extractAutoOffHour(DevicePreference p) {
         Object v = invokeFirst(p,
                 "getAutoOffHour", "getTurnOffHour", "getOffHour", "getScheduledOffHour");
         if (v instanceof Number) return ((Number) v).intValue();

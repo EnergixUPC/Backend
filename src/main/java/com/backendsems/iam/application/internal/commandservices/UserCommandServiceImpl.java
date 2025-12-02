@@ -10,6 +10,7 @@ import com.backendsems.iam.infrastructure.persistence.jpa.repositories.RoleRepos
 import com.backendsems.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import com.backendsems.iam.domain.model.entities.Role;
 import com.backendsems.iam.domain.model.valueobjects.Roles;
+import com.backendsems.profiles.interfaces.acl.ProfilesContextFacade;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.springframework.stereotype.Service;
@@ -30,12 +31,16 @@ public class UserCommandServiceImpl implements UserCommandService {
     private final HashingService hashingService;
     private final TokenService tokenService;
     private final RoleRepository roleRepository;
+    private final ProfilesContextFacade profilesContextFacade;
 
-    public UserCommandServiceImpl(UserRepository userRepository, HashingService hashingService, TokenService tokenService, RoleRepository roleRepository) {
+    public UserCommandServiceImpl(UserRepository userRepository, HashingService hashingService, 
+                                 TokenService tokenService, RoleRepository roleRepository,
+                                 ProfilesContextFacade profilesContextFacade) {
         this.userRepository = userRepository;
         this.hashingService = hashingService;
         this.tokenService = tokenService;
         this.roleRepository = roleRepository;
+        this.profilesContextFacade = profilesContextFacade;
     }
 
     @PostConstruct
@@ -78,11 +83,59 @@ public class UserCommandServiceImpl implements UserCommandService {
      */
     @Override
     public Optional<User> handle(SignUpCommand command) {
-        if (userRepository.existsByEmail(command.email()))
+        System.out.println("=== Starting sign-up process ===");
+        System.out.println("Email: " + command.email());
+        
+        if (userRepository.existsByEmail(command.email())) {
+            System.err.println("ERROR: Email already exists");
             throw new RuntimeException("Email already exists");
-        var roles = command.roles().stream().map(role -> roleRepository.findByName(role.getName()).orElseThrow(() -> new RuntimeException("Role name not found"))).toList();
-        var user = new User(command.email(), hashingService.encode(command.password()), command.name(), command.lastName(), command.phone(), command.address(), roles);
+        }
+        
+        System.out.println("Converting role names to Role entities...");
+        // Convert role names to Role entities by looking them up in the database
+        var roles = command.roles().stream()
+            .map(roleName -> {
+                System.out.println("Looking up role: " + roleName);
+                // Try to parse as Roles enum
+                try {
+                    var roleEnum = Roles.valueOf(roleName);
+                    var role = roleRepository.findByName(roleEnum)
+                        .orElseThrow(() -> new RuntimeException("Role not found: " + roleName));
+                    System.out.println("Role found: " + role.getName());
+                    return role;
+                } catch (IllegalArgumentException e) {
+                    System.err.println("ERROR: Invalid role name: " + roleName);
+                    throw new RuntimeException("Invalid role name: " + roleName);
+                }
+            })
+            .toList();
+        
+        System.out.println("Creating user...");
+        var encodedPassword = hashingService.encode(command.password());
+        var user = new User(command.email(), encodedPassword, 
+            command.name(), command.lastName(), command.phone(), command.address(), roles);
         userRepository.save(user);
+        System.out.println("User saved successfully");
+        
+        // Create associated profile
+        System.out.println("Creating profile...");
+        try {
+            Long profileId = profilesContextFacade.createProfile(
+                command.name(), 
+                command.lastName(), 
+                command.email(), 
+                encodedPassword, 
+                command.phone(), 
+                command.address()
+            );
+            System.out.println("Profile created with ID: " + profileId);
+        } catch (Exception e) {
+            System.err.println("ERROR creating profile: " + e.getMessage());
+            e.printStackTrace();
+            // Continue even if profile creation fails
+        }
+        
+        System.out.println("=== Sign-up process completed ===");
         return userRepository.findByEmail(command.email());
     }
 }

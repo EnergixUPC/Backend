@@ -5,7 +5,7 @@ import com.backendsems.shared.domain.model.aggregates.AuditableAbstractAggregate
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.HashSet;
 import java.util.List;
@@ -17,17 +17,13 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor
 @Entity
+@Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
 public class User extends AuditableAbstractAggregateRoot<User> {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     @Column(unique = true)
-    @Getter
     private String email;
 
-    @Getter
     private String password;
 
     private String name;
