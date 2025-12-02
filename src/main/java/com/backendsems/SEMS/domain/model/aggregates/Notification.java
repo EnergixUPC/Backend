@@ -3,10 +3,8 @@ package com.backendsems.SEMS.domain.model.aggregates;
 import com.backendsems.SEMS.domain.model.valueobjects.DeviceId;
 import com.backendsems.SEMS.domain.model.valueobjects.NotificationId;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -15,25 +13,33 @@ import java.util.UUID;
  * Notification Aggregate Root
  * Representa el agregado de notificación en el dominio.
  */
+@Getter
 @Entity
 public class Notification {
 
-    @Id
+    @EmbeddedId
     @AttributeOverride(name = "value", column = @Column(name = "notification_id"))
     private NotificationId id;
     
+    @Embedded
     @AttributeOverride(name = "value", column = @Column(name = "device_id"))
     private DeviceId deviceId;
     
+    @Embedded
     @AttributeOverride(name = "id", column = @Column(name = "user_id"))
     private UserId userId;
     
+    @Column(nullable = false)
     private String message;
+    
+    @Column(nullable = false)
     private String type;
+    
+    @Column(nullable = false)
     private LocalDateTime timestamp;
 
     protected Notification() {
-        // Constructor vacío para frameworks
+        // Constructor vacío para JPA
     }
 
     public Notification(NotificationId id, DeviceId deviceId, UserId userId, String message, String type, LocalDateTime timestamp) {
@@ -55,30 +61,5 @@ public class Notification {
                 type,
                 LocalDateTime.now()
         );
-    }
-
-    // Getters
-    public NotificationId getId() {
-        return id;
-    }
-
-    public DeviceId getDeviceId() {
-        return deviceId;
-    }
-
-    public UserId getUserId() {
-        return userId;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public LocalDateTime getTimestamp() {
-        return timestamp;
     }
 }

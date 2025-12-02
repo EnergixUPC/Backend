@@ -1,7 +1,7 @@
 package com.backendsems.SEMS.application.internal.commandservices;
 
+import com.backendsems.SEMS.domain.model.aggregates.Notification;
 import com.backendsems.SEMS.domain.model.commands.CreateNotificationCommand;
-import com.backendsems.SEMS.domain.model.entities.NotificationEntity;
 import com.backendsems.SEMS.domain.model.events.NotificationCreatedEvent;
 import com.backendsems.SEMS.domain.model.valueobjects.NotificationId;
 import com.backendsems.SEMS.domain.services.NotificationCommandService;
@@ -32,7 +32,7 @@ public class NotificationCommandServiceImpl implements NotificationCommandServic
     public void createNotification(CreateNotificationCommand command) {
         NotificationId id = new NotificationId(UUID.randomUUID().toString());
         LocalDateTime now = LocalDateTime.now();
-        NotificationEntity entity = new NotificationEntity(
+        Notification entity = new Notification(
                 id,
                 command.deviceId(),
                 command.userId(),

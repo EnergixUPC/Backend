@@ -1,6 +1,6 @@
 package com.backendsems.SEMS.application.internal.queryservices;
 
-import com.backendsems.SEMS.domain.model.entities.NotificationEntity;
+import com.backendsems.SEMS.domain.model.aggregates.Notification;
 import com.backendsems.SEMS.domain.model.valueobjects.DeviceId;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.SEMS.domain.services.NotificationQueryService;
@@ -24,17 +24,17 @@ public class NotificationQueryServiceImpl implements NotificationQueryService {
     }
 
     @Override
-    public List<NotificationEntity> getNotificationsByDeviceId(DeviceId deviceId) {
+    public List<Notification> getNotificationsByDeviceId(DeviceId deviceId) {
         return notificationRepository.findByDeviceId(deviceId);
     }
 
     @Override
-    public List<NotificationEntity> getNotificationsByUserId(UserId userId) {
+    public List<Notification> getNotificationsByUserId(UserId userId) {
         return notificationRepository.findByUserId(userId);
     }
 
     @Override
-    public List<NotificationEntity> getAllNotifications() {
+    public List<Notification> getAllNotifications() {
         return notificationRepository.findAll();
     }
 }
