@@ -1,6 +1,5 @@
 package com.backendsems.iam.domain.model.commands;
 
-import com.backendsems.iam.domain.model.entities.Role;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
@@ -15,5 +14,5 @@ public record SignUpCommand(
     @NotBlank String lastName,
     String phone,
     String address,
-    List<Role> roles
+    List<String> roles
 ) {}

@@ -78,7 +78,14 @@ public class AuthenticationController {
             }
             var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(user.get());
             return new ResponseEntity<>(userResource, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            // Log the error for debugging
+            System.err.println("Sign-up error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().build();
         } catch (Exception e) {
+            System.err.println("Unexpected error during sign-up: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
     }

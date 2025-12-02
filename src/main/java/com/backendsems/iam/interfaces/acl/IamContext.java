@@ -1,14 +1,12 @@
 package com.backendsems.iam.interfaces.acl;
 
 import com.backendsems.iam.domain.model.commands.SignUpCommand;
-import com.backendsems.iam.domain.model.entities.Role;
 import com.backendsems.iam.domain.model.queries.GetUserByEmailQuery;
 import com.backendsems.iam.domain.model.queries.GetUserByIdQuery;
 import com.backendsems.iam.domain.services.UserCommandService;
 import com.backendsems.iam.domain.services.UserQueryService;
 import org.apache.logging.log4j.util.Strings;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,7 +34,7 @@ public class IamContext {
      * @return The id of the created user.
      */
     public Long createUser(String email, String password) {
-        var signUpCommand = new SignUpCommand(email, password, "", "", "", "", List.of(Role.getDefaultRole()));
+        var signUpCommand = new SignUpCommand(email, password, "", "", "", "", List.of("ROLE_USER"));
         var result = userCommandService.handle(signUpCommand);
         if (result.isEmpty()) return 0L;
         return result.get().getId();
@@ -50,8 +48,7 @@ public class IamContext {
      * @return The id of the created user.
      */
     public Long createUser(String email, String password, List<String> roleNames) {
-        List<Role> roles = roleNames.stream().map(name -> Role.toRoleFromName(name)).toList();
-        var signUpCommand = new SignUpCommand(email, password, "", "", "", "", roles);
+        var signUpCommand = new SignUpCommand(email, password, "", "", "", "", roleNames);
         var result = userCommandService.handle(signUpCommand);
         if (result.isEmpty()) return 0L;
         return result.get().getId();
