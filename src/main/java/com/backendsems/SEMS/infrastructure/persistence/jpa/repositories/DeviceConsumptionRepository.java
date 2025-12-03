@@ -105,4 +105,41 @@ public interface DeviceConsumptionRepository extends JpaRepository<DeviceConsump
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+
+    /**
+     * Obtiene todos los consumos de un usuario por período (usando user_id directamente).
+     * @param userId El ID del usuario.
+     * @param period El período de consumo (daily, weekly, monthly).
+     * @return Lista de consumos del usuario.
+     */
+    @Query("SELECT dc FROM DeviceConsumption dc " +
+           "WHERE dc.userId.id = :userId AND dc.periodo = :period")
+    List<DeviceConsumption> findByUserIdAndPeriod(
+        @Param("userId") Long userId,
+        @Param("period") String period
+    );
+
+    /**
+     * Obtiene la suma del consumo diario total de un usuario para una fecha específica.
+     * @param userId El ID del usuario.
+     * @param fecha La fecha específica.
+     * @return La suma total del consumo del usuario en esa fecha.
+     */
+    @Query("SELECT COALESCE(SUM(dc.consumo), 0.0) " +
+           "FROM DeviceConsumption dc " +
+           "WHERE dc.userId.id = :userId AND dc.periodo = 'daily' AND dc.fecha = :fecha")
+    Double sumDailyConsumptionByUserIdAndDate(
+        @Param("userId") Long userId,
+        @Param("fecha") LocalDate fecha
+    );
+
+    /**
+     * Obtiene la suma del consumo mensual total de un usuario.
+     * @param userId El ID del usuario.
+     * @return La suma total del consumo mensual del usuario.
+     */
+    @Query("SELECT COALESCE(SUM(dc.consumo), 0.0) " +
+           "FROM DeviceConsumption dc " +
+           "WHERE dc.userId.id = :userId AND dc.periodo = 'monthly'")
+    Double sumMonthlyConsumptionByUserId(@Param("userId") Long userId);
 }
