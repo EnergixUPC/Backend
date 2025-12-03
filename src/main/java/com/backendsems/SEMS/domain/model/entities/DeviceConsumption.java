@@ -1,6 +1,7 @@
 package com.backendsems.SEMS.domain.model.entities;
 
 import com.backendsems.SEMS.domain.model.aggregates.Device;
+import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.shared.domain.model.entities.AuditableModel;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +21,11 @@ public class DeviceConsumption extends AuditableModel {
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
 
+    @Embedded
+    @AttributeOverride(name = "id", column = @Column(name = "user_id", nullable = false))
+    @NotNull
+    private UserId userId;
+
     @Column(nullable = false)
     @NotNull
     private Double consumo;
@@ -38,6 +44,7 @@ public class DeviceConsumption extends AuditableModel {
     // Constructor para creación controlada
     public DeviceConsumption(Device device, Double consumo, String periodo) {
         this.device = device;
+        this.userId = device.getUserId(); // Copiar userId del device
         this.consumo = consumo;
         this.periodo = periodo;
         this.fecha = LocalDate.now(); // Valor por defecto
@@ -46,6 +53,7 @@ public class DeviceConsumption extends AuditableModel {
     // Constructor con fecha específica
     public DeviceConsumption(Device device, Double consumo, String periodo, LocalDate fecha) {
         this.device = device;
+        this.userId = device.getUserId(); // Copiar userId del device
         this.consumo = consumo;
         this.periodo = periodo;
         this.fecha = fecha != null ? fecha : LocalDate.now();

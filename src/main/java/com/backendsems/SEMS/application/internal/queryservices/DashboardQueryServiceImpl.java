@@ -11,6 +11,7 @@ import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.SEMS.domain.services.DashboardQueryService;
 import com.backendsems.SEMS.domain.services.DeviceQueryService;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DashboardRepository;
+import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceConsumptionRepository;
 import com.backendsems.SEMS.domain.model.aggregates.Dashboard;
 import org.springframework.stereotype.Service;
 
@@ -25,17 +26,21 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
 
     private final DeviceQueryService deviceQueryService;
     private final DashboardRepository dashboardRepository;
+    private final DeviceConsumptionRepository deviceConsumptionRepository;
 
     public DashboardQueryServiceImpl(DeviceQueryService deviceQueryService,
-                                     DashboardRepository dashboardRepository) {
+                                     DashboardRepository dashboardRepository,
+                                     DeviceConsumptionRepository deviceConsumptionRepository) {
         this.deviceQueryService = deviceQueryService;
         this.dashboardRepository = dashboardRepository;
+        this.deviceConsumptionRepository = deviceConsumptionRepository;
     }
 
     @Override
     public GetDashboardByUserIdQuery.DashboardData handle(GetDashboardByUserIdQuery query) {
         UserId userId = query.userId();
 
+        // 1. Obtener dispositivos activos del usuario
         var deviceAggregates = deviceQueryService.handle(new GetDevicesByUserIdQuery(userId));
         var devices = deviceAggregates.stream()
                 .map(d -> new GetDashboardByUserIdQuery.DeviceItem(
@@ -46,26 +51,65 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
                 .collect(Collectors.toList());
         int activeDevices = devices.size();
 
-        var weekly = deviceQueryService.handle(new GetWeeklyConsumptionByUserQuery(userId));
-        Instant now = Instant.now();
+        // 2. Obtener fecha actual
         LocalDate today = LocalDate.now(ZoneOffset.UTC);
-        Instant startOfDay = today.atStartOfDay().toInstant(ZoneOffset.UTC);
+        
+        // 3. Calcular consumo del día actual directamente desde el repositorio (suma de todos los dispositivos)
+        Double todaysConsumptionKwhRaw = deviceConsumptionRepository.sumDailyConsumptionByUserIdAndDate(userId.id(), today);
+        double todaysConsumptionKwh = todaysConsumptionKwhRaw != null ? todaysConsumptionKwhRaw : 0.0;
+        
+        // 4. Calcular consumo mensual total (suma de todos los dispositivos del usuario)
+        Double currentMonthConsumptionRaw = deviceConsumptionRepository.sumMonthlyConsumptionByUserId(userId.id());
+        double currentMonthConsumption = currentMonthConsumptionRaw != null ? currentMonthConsumptionRaw : 0.0;
+        
+        // 5. Obtener todos los consumos del usuario para cálculos adicionales
+        var allConsumptions = deviceQueryService.handle(new GetWeeklyConsumptionByUserQuery(userId));
+        List<DeviceConsumption> todayConsumptions = allConsumptions.stream()
+                .filter(c -> c.getPeriodo().equals("daily") && 
+                            c.getFecha() != null && 
+                            c.getFecha().equals(today))
+                .collect(Collectors.toList());
 
+        // 6. Configurar precio por kWh y meta mensual (valores por defecto o de preferencias)
+        var preferences = deviceQueryService.handle(new GetAllPreferencesByUserIdQuery(userId));
+        double pricePerKwh = 0.50; // Precio por defecto en soles por kWh (Perú)
+        double monthlySavingGoalKwh = 300.0; // Meta de ahorro por defecto: 300 kWh mensuales
+
+        // Intentar obtener threshold promedio como referencia de meta
+        if (!preferences.isEmpty()) {
+            double avgThreshold = preferences.stream()
+                    .mapToDouble(DevicePreference::getThreshold)
+                    .average()
+                    .orElse(300.0);
+            if (avgThreshold > 0) {
+                monthlySavingGoalKwh = avgThreshold;
+            }
+        }
+
+        // 7. Calcular factura estimada mensual
+        double estimatedBill = currentMonthConsumption * pricePerKwh;
+
+        // 8. Calcular porcentaje de ahorro estimado
+        // Porcentaje de ahorro = ((Meta - Consumo actual) / Meta) * 100
+        // Si el consumo es menor que la meta, hay ahorro positivo
+        // Si el consumo es mayor que la meta, hay ahorro negativo (se está pasando)
+        double estimatedSavingsPercent = 0.0;
+        if (monthlySavingGoalKwh > 0) {
+            estimatedSavingsPercent = ((monthlySavingGoalKwh - currentMonthConsumption) / monthlySavingGoalKwh) * 100.0;
+        }
+
+        // 9. Preparar datos por hora para gráficos (consumo del día actual)
         Map<Integer, Double> hourly = new HashMap<>();
         for (int h = 0; h < 24; h++) hourly.put(h, 0.0);
-        weekly.stream()
-                .filter(c -> {
-                    Instant ts = extractTimestamp(c);
-                    return ts != null && !ts.isBefore(startOfDay) && !ts.isAfter(now);
-                })
-                .forEach(c -> {
-                    Instant ts = extractTimestamp(c);
-                    if (ts != null) {
-                        int hour = ZonedDateTime.ofInstant(ts, ZoneOffset.UTC).getHour();
-                        double kwh = extractKwh(c);
-                        hourly.compute(hour, (k, v) -> v + kwh);
-                    }
-                });
+        
+        // Distribuir el consumo diario a lo largo de las horas (simulación simple)
+        int currentHour = ZonedDateTime.now(ZoneOffset.UTC).getHour();
+        todayConsumptions.forEach(c -> {
+            double consumoPerHour = c.getConsumo() / 24.0;
+            for (int h = 0; h <= currentHour; h++) {
+                hourly.compute(h, (k, v) -> v + consumoPerHour);
+            }
+        });
 
         var daily = hourly.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
@@ -74,80 +118,57 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
                         e.getValue()))
                 .collect(Collectors.toList());
 
-        double todaysConsumptionKwh = daily.stream()
-                .mapToDouble(GetDashboardByUserIdQuery.DailyItem::kwh).sum();
+        // 10. Calcular consumo por categoría
+        Map<String, Double> categoryConsumption = new HashMap<>();
+        
+        // Agrupar consumos por categoría de dispositivo
+        deviceAggregates.forEach(device -> {
+            Long deviceId = extractId(device);
+            String category = extractCategoryString(device);
+            
+            double deviceDailyConsumption = todayConsumptions.stream()
+                    .filter(c -> c.getDevice().getId().equals(deviceId))
+                    .mapToDouble(DeviceConsumption::getConsumo)
+                    .sum();
+            
+            categoryConsumption.merge(category != null ? category : "Other", 
+                                     deviceDailyConsumption, 
+                                     Double::sum);
+        });
 
-
-        var topDevices = deviceQueryService.handle(new GetTopDevicesByUserQuery(userId, 10));
-        Map<String, Double> categoryConsumption = topDevices.stream()
-                .collect(Collectors.groupingBy(
-                        c -> {
-                            String cat = extractDeviceCategory(topDevices, c);
-                            return cat != null ? cat : "Other";
-                        },
-                        Collectors.summingDouble(this::extractKwh)));
-
-
-        var preferences = deviceQueryService.handle(new GetAllPreferencesByUserIdQuery(userId));
-        double monthlySavingGoalKwh = preferences.stream()
-                .map(this::extractMonthlyGoal)
-                .filter(v -> v > 0)
-                .findFirst().orElse(0.0);
-        double pricePerKwh = preferences.stream()
-                .map(this::extractPricePerKwh)
-                .filter(v -> v > 0)
-                .findFirst().orElse(0.0);
-
-
-        YearMonth currentMonth = YearMonth.now(ZoneOffset.UTC);
-        double currentMonthConsumption = weekly.stream()
-                .filter(c -> {
-                    Instant ts = extractTimestamp(c);
-                    return ts != null && YearMonth.from(ZonedDateTime.ofInstant(ts, ZoneOffset.UTC)).equals(currentMonth);
-                })
-                .mapToDouble(this::extractKwh)
-                .sum();
-
-        double estimatedSavingsPercent = monthlySavingGoalKwh > 0
-                ? ((monthlySavingGoalKwh - currentMonthConsumption) / monthlySavingGoalKwh) * 100.0
-                : 0.0;
-
-        double estimatedBill = todaysConsumptionKwh * pricePerKwh;
-
-
+        // 11. Generar alertas inteligentes
         List<GetDashboardByUserIdQuery.AlertItem> alerts = new ArrayList<>();
-        Instant threeHoursAgo = now.minus(3, ChronoUnit.HOURS);
-        double last3Hours = weekly.stream()
-                .filter(c -> {
-                    Instant ts = extractTimestamp(c);
-                    return ts != null && !ts.isBefore(threeHoursAgo) && !ts.isAfter(now);
-                })
-                .mapToDouble(this::extractKwh)
-                .sum();
-        long hoursElapsed = Math.max(1, Duration.between(startOfDay, now).toHours());
-        double avgSoFarPerHour = todaysConsumptionKwh / hoursElapsed;
-        if (avgSoFarPerHour > 0 && last3Hours > avgSoFarPerHour * 3 * 1.2) {
+        
+        // Alerta si el consumo del mes actual supera el 80% de la meta
+        if (monthlySavingGoalKwh > 0 && currentMonthConsumption > monthlySavingGoalKwh * 0.8) {
             alerts.add(new GetDashboardByUserIdQuery.AlertItem(
                     "warning",
-                    "High consumption detected! Your usage is 20% above average in the last 3 hours."
+                    String.format("¡Atención! Has consumido %.1f kWh de tu meta de %.1f kWh (%.1f%%)",
+                            currentMonthConsumption, monthlySavingGoalKwh, 
+                            (currentMonthConsumption / monthlySavingGoalKwh) * 100)
             ));
         }
 
+        // Alerta si el consumo diario es muy alto
+        double avgDailyConsumption = monthlySavingGoalKwh / 30.0; // Promedio esperado por día
+        if (todaysConsumptionKwh > avgDailyConsumption * 1.5) {
+            alerts.add(new GetDashboardByUserIdQuery.AlertItem(
+                    "info",
+                    String.format("Consumo alto hoy: %.2f kWh (promedio esperado: %.2f kWh)",
+                            todaysConsumptionKwh, avgDailyConsumption)
+            ));
+        }
 
-        preferences.forEach(p -> {
-            int autoOffHour = extractAutoOffHour(p);
-            if (autoOffHour >= 0) {
-                int currentHour = ZonedDateTime.ofInstant(now, ZoneOffset.UTC).getHour();
-                if (currentHour > autoOffHour) {
-                    alerts.add(new GetDashboardByUserIdQuery.AlertItem(
-                            "info",
-                            "Reminder: You forgot to turn off a device past its scheduled off hour."
-                    ));
-                }
-            }
-        });
+        // Alerta positiva si estás ahorrando
+        if (estimatedSavingsPercent > 20) {
+            alerts.add(new GetDashboardByUserIdQuery.AlertItem(
+                    "success",
+                    String.format("¡Excelente! Estás ahorrando un %.1f%% respecto a tu meta mensual",
+                            estimatedSavingsPercent)
+            ));
+        }
 
-        // Persistencia en tabla dashboard
+        // 12. Persistir en tabla dashboard
         Optional<Dashboard> existing = dashboardRepository.findByUserId(userId.id());
         if (existing.isPresent()) {
             Dashboard dashboard = existing.get();
