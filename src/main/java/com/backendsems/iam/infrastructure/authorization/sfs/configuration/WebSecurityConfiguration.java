@@ -19,6 +19,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.http.HttpMethod;
 
 import java.util.Arrays;
 import java.util.List;
@@ -97,7 +98,9 @@ public class WebSecurityConfiguration {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        System.out.println("Configuring security filter chain");
         http.cors(configurer -> configurer.configurationSource(request -> {
+            System.out.println("CORS configuration for: " + request.getMethod() + " " + request.getRequestURI());
             var cors = new CorsConfiguration();
             // Usar los orígenes configurados en application.properties
             cors.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
@@ -119,11 +122,13 @@ public class WebSecurityConfiguration {
                                 "/swagger-ui/**",
                                 "/swagger-resources/**",
                                 "/webjars/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/v1/devices/**").permitAll()
                         .requestMatchers("/api/v1/devices/**").authenticated()
                         .requestMatchers("/api/v1/users/**").authenticated()
                         .anyRequest().authenticated());
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authorizationRequestFilter(), UsernamePasswordAuthenticationFilter.class);
+        System.out.println("Filter added to chain");
         return http.build();
 
     }

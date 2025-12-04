@@ -71,8 +71,16 @@ public class TokenServiceImpl implements TokenService, BearerTokenService {
     @Override
     public String getBearerTokenFrom(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+        if (bearerToken != null) {
+            // Si ya tiene el prefijo "Bearer ", lo quitamos
+            if (bearerToken.startsWith("Bearer ")) {
+                return bearerToken.substring(7);
+            }
+            // Si es solo el token (Swagger a veces lo envía así), lo retornamos directamente
+            // Validamos que tenga formato de JWT (tres partes separadas por puntos)
+            if (bearerToken.split("\\.").length == 3) {
+                return bearerToken;
+            }
         }
         return null;
     }
