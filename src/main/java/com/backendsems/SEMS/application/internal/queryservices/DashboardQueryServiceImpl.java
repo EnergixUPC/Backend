@@ -5,7 +5,6 @@ import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.model.queries.GetAllPreferencesByUserIdQuery;
 import com.backendsems.SEMS.domain.model.queries.GetDevicesByUserIdQuery;
 import com.backendsems.SEMS.domain.model.queries.GetDashboardByUserIdQuery;
-import com.backendsems.SEMS.domain.model.queries.GetTopDevicesByUserQuery;
 import com.backendsems.SEMS.domain.model.queries.GetWeeklyConsumptionByUserQuery;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.SEMS.domain.services.DashboardQueryService;
@@ -17,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Method;
 import java.time.*;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,7 +69,7 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
                 .collect(Collectors.toList());
 
         // 6. Configurar precio por kWh y meta mensual (valores por defecto o de preferencias)
-        var preferences = deviceQueryService.handle(new GetAllPreferencesByUserIdQuery(userId));
+        var preferences = deviceQueryService.handle(new GetAllPreferencesByUserIdQuery(userId.id()));
         double pricePerKwh = 0.50; // Precio por defecto en soles por kWh (Perú)
         double monthlySavingGoalKwh = 300.0; // Meta de ahorro por defecto: 300 kWh mensuales
 
@@ -226,20 +224,24 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
         return v != null ? v.toString() : "Unknown";
     }
 
+    // Métodos auxiliares para extraer datos - Comentados ya que no están en uso actualmente
+    // Se mantienen para futuras implementaciones
+
+    /*
     private Instant extractTimestamp(DeviceConsumption e) {
         Object v = invokeFirst(e,
                 "getTimestamp", "getOccurredAt", "getRecordedAt", "getCreatedAt", "getDateTime", "getDate");
-        if (v instanceof Instant) return (Instant) v;
-        if (v instanceof LocalDateTime) return ((LocalDateTime) v).toInstant(ZoneOffset.UTC);
-        if (v instanceof LocalDate) return ((LocalDate) v).atStartOfDay().toInstant(ZoneOffset.UTC);
-        if (v instanceof Date) return ((Date) v).toInstant();
+        if (v instanceof Instant instant) return instant;
+        if (v instanceof LocalDateTime ldt) return ldt.toInstant(ZoneOffset.UTC);
+        if (v instanceof LocalDate ld) return ld.atStartOfDay().toInstant(ZoneOffset.UTC);
+        if (v instanceof Date date) return date.toInstant();
         return null;
     }
 
     private double extractKwh(DeviceConsumption e) {
         Object v = invokeFirst(e,
                 "getKwh", "getConsumption", "getEnergy", "getValue", "getAmount");
-        if (v instanceof Number) return ((Number) v).doubleValue();
+        if (v instanceof Number number) return number.doubleValue();
         return 0.0;
     }
 
@@ -252,30 +254,33 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
     private double extractMonthlyGoal(DevicePreference p) {
         Object v = invokeFirst(p,
                 "getMonthlySavingGoalKwh", "getMonthlySavingGoal", "getSavingGoal", "getGoalKwh", "getGoal");
-        if (v instanceof Number) return ((Number) v).doubleValue();
+        if (v instanceof Number number) return number.doubleValue();
         return 0.0;
     }
 
     private double extractPricePerKwh(DevicePreference p) {
         Object v = invokeFirst(p,
                 "getPricePerKwh", "getEnergyPrice", "getTariff", "getPrice");
-        if (v instanceof Number) return ((Number) v).doubleValue();
+        if (v instanceof Number number) return number.doubleValue();
         return 0.0;
     }
 
     private int extractAutoOffHour(DevicePreference p) {
         Object v = invokeFirst(p,
                 "getAutoOffHour", "getTurnOffHour", "getOffHour", "getScheduledOffHour");
-        if (v instanceof Number) return ((Number) v).intValue();
+        if (v instanceof Number number) return number.intValue();
         return -1;
     }
+    */
 
     private Object invokeFirst(Object target, String... methodNames) {
         for (String m : methodNames) {
             try {
                 Method method = target.getClass().getMethod(m);
                 return method.invoke(target);
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                // Ignorar excepciones de métodos no encontrados
+            }
         }
         return null;
     }
