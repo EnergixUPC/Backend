@@ -1,7 +1,5 @@
 package com.backendsems.SEMS.domain.model.entities;
 
-import com.backendsems.SEMS.domain.model.aggregates.Device;
-import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.shared.domain.model.entities.AuditableModel;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -9,20 +7,15 @@ import lombok.Getter;
 
 /**
  * DevicePreference
- * Entity dependiente que representa las preferencias de un usuario para un dispositivo específico.
- * Contiene Foreign Key hacia el aggregate Device.
+ * Entity que representa las preferencias globales de un usuario para todos sus dispositivos.
  */
 @Getter
 @Entity
+@Table(name = "device_preferences")
 public class DevicePreference extends AuditableModel {
-    @Embedded
-    @AttributeOverride(name = "id", column = @Column(name = "user_id"))
+    @Column(name = "user_id", unique = true, nullable = false)
     @NotNull
-    private UserId userId;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "device_id", nullable = false)
-    private Device device;
+    private Long userId;
 
     @Column(nullable = false)
     @NotNull
@@ -76,7 +69,7 @@ public class DevicePreference extends AuditableModel {
     }
 
     // Constructor para creación controlada
-    public DevicePreference(UserId userId, Device device, Double threshold, boolean notificationEnabled,
+    public DevicePreference(Long userId, Double threshold, boolean notificationEnabled,
                              boolean habilitarMonitoreoEnergia, boolean recibirAlertasAltoConsumo,
                              boolean monitorearCalefaccionRefrigeracion, boolean monitorearElectrodomesticosPrincipales,
                              boolean monitorearElectronicos, boolean monitorearDispositivosCocina,
@@ -84,7 +77,6 @@ public class DevicePreference extends AuditableModel {
                              boolean emailsResumenDiario, boolean reportesProgresoSemanal,
                              boolean sugerirAutomizacionesAhorro, boolean alertasDispositivosDesconectados) {
         this.userId = userId;
-        this.device = device;
         this.threshold = threshold;
         this.notificationEnabled = notificationEnabled;
         this.habilitarMonitoreoEnergia = habilitarMonitoreoEnergia;

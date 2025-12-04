@@ -61,17 +61,22 @@ public class DeviceQueryServiceImpl implements DeviceQueryService {
 
     @Override
     public DevicePreference handle(GetPreferencesByUserIdAndDeviceIdQuery query) {
-        return preferencesRepository.findByUserIdAndDeviceId(query.userId(), query.deviceId()).orElse(null);
+        // Ahora las preferencias son globales por usuario, ignoramos deviceId
+        return preferencesRepository.findByUserId(query.userId()).orElse(null);
     }
 
     @Override
     public boolean handle(PreferencesExistQuery query) {
-        return preferencesRepository.existsByUserIdAndDeviceId(query.userId(), query.deviceId());
+        // Ahora las preferencias son globales por usuario, ignoramos deviceId
+        return preferencesRepository.existsByUserId(query.userId());
     }
 
     @Override
     public List<DevicePreference> handle(GetAllPreferencesByUserIdQuery query) {
-        return preferencesRepository.findByUserId(query.userId());
+        // findByUserId retorna Optional, convertimos a lista
+        return preferencesRepository.findByUserId(query.userId())
+                .map(List::of)
+                .orElse(List.of());
     }
 
     @Override
