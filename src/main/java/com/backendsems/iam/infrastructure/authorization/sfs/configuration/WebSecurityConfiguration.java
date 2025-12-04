@@ -4,6 +4,7 @@ import com.backendsems.iam.infrastructure.authorization.sfs.pipeline.BearerAutho
 import com.backendsems.iam.infrastructure.hashing.bcrypt.BCryptHashingService;
 import com.backendsems.iam.infrastructure.tokens.jwt.BearerTokenService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -40,6 +42,9 @@ public class WebSecurityConfiguration {
     private final BCryptHashingService hashingService;
 
     private final AuthenticationEntryPoint unauthorizedRequestHandler;
+    
+    @Value("${cors.allowed-origins}")
+    private String allowedOrigins;
 
     /**
      * This method creates the Bearer Authorization Request Filter.
@@ -94,9 +99,13 @@ public class WebSecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.cors(configurer -> configurer.configurationSource(request -> {
             var cors = new CorsConfiguration();
-            cors.setAllowedOrigins(List.of("*"));
-            cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+            // Usar los orígenes configurados en application.properties
+            cors.setAllowedOrigins(Arrays.asList(allowedOrigins.split(",")));
+            cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
             cors.setAllowedHeaders(List.of("*"));
+            cors.setAllowCredentials(true); // Permite credenciales con orígenes específicos
+            cors.setExposedHeaders(List.of("Authorization", "Content-Type"));
+            cors.setMaxAge(3600L);
             return cors;
         }));
         http.csrf(csrfConfigurer -> csrfConfigurer.disable())

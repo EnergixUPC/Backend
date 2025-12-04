@@ -49,8 +49,8 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
                 .collect(Collectors.toList());
         int activeDevices = devices.size();
 
-        // 2. Obtener fecha actual
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        // 2. Obtener fecha actual (usando zona horaria de Perú UTC-5)
+        LocalDate today = LocalDate.now(ZoneId.of("America/Lima"));
         
         // 3. Calcular consumo del día actual directamente desde el repositorio (suma de todos los dispositivos)
         Double todaysConsumptionKwhRaw = deviceConsumptionRepository.sumDailyConsumptionByUserIdAndDate(userId.id(), today);
@@ -101,7 +101,7 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
         for (int h = 0; h < 24; h++) hourly.put(h, 0.0);
         
         // Distribuir el consumo diario a lo largo de las horas (simulación simple)
-        int currentHour = ZonedDateTime.now(ZoneOffset.UTC).getHour();
+        int currentHour = ZonedDateTime.now(ZoneId.of("America/Lima")).getHour();
         todayConsumptions.forEach(c -> {
             double consumoPerHour = c.getConsumo() / 24.0;
             for (int h = 0; h <= currentHour; h++) {
