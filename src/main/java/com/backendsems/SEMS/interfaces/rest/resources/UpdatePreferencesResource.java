@@ -2,10 +2,9 @@ package com.backendsems.SEMS.interfaces.rest.resources;
 
 /**
  * UpdatePreferencesResource
- * Recurso REST para actualizar preferencias de un dispositivo.
+ * Recurso REST para actualizar preferencias globales del usuario.
  */
 public record UpdatePreferencesResource(
-        Long deviceId,
         // Monitoring Settings
         boolean habilitarMonitoreoEnergia,
         boolean recibirAlertasAltoConsumo,

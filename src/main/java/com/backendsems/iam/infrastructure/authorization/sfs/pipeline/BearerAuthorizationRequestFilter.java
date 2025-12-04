@@ -47,18 +47,22 @@ public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
+            LOGGER.info("Processing request to: {}", request.getRequestURI());
             String token = tokenService.getBearerTokenFrom(request);
-            LOGGER.info("Token: {}", token);
+            LOGGER.info("Token extracted: {}", token != null ? "Present" : "Missing");
             if (token != null && tokenService.validateToken(token)) {
                 String username = tokenService.getUsernameFromToken(token);
+                LOGGER.info("Username from token: {}", username);
                 var userDetails = userDetailsService.loadUserByUsername(username);
+                LOGGER.info("User details loaded: {}", userDetails.getUsername());
                 SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request));
+                LOGGER.info("Authentication set successfully for user: {}", username);
             } else {
-                LOGGER.info("Token is not valid");
+                LOGGER.warn("Token validation failed - Token is null or invalid");
             }
 
         } catch (Exception e) {
-            LOGGER.error("Cannot set user authentication: {}", e.getMessage());
+            LOGGER.error("Cannot set user authentication: {}", e.getMessage(), e);
         }
         filterChain.doFilter(request, response);
     }

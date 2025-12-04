@@ -4,7 +4,7 @@ package com.backendsems.SEMS.domain.model.commands;
  * UpdatePreferencesCommand
  */
 public record UpdatePreferencesCommand(
-        Long deviceId,
+        Long userId,
         // Monitoring Settings
         boolean habilitarMonitoreoEnergia,
         boolean recibirAlertasAltoConsumo,

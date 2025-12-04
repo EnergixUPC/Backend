@@ -12,11 +12,12 @@ public class UpdatePreferencesFromResourceAssembler {
     /**
      * Convierte un UpdatePreferencesResource a UpdatePreferencesCommand.
      * @param resource El recurso de actualización.
+     * @param userId El ID del usuario.
      * @return UpdatePreferencesCommand.
      */
-    public static UpdatePreferencesCommand toCommand(UpdatePreferencesResource resource) {
+    public static UpdatePreferencesCommand toCommand(UpdatePreferencesResource resource, Long userId) {
         return new UpdatePreferencesCommand(
-                resource.deviceId(),
+                userId,
                 resource.habilitarMonitoreoEnergia(),
                 resource.recibirAlertasAltoConsumo(),
                 resource.monitorearCalefaccionRefrigeracion(),
