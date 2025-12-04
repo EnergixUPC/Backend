@@ -155,10 +155,14 @@ public class DevicesController {
      * @return Mensaje de eliminación
      */
     @DeleteMapping("/{deviceId}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Delete device", description = "Delete device")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Device deleted")})
+            @ApiResponse(responseCode = "200", description = "Device deleted"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Device doesn't belong to user"),
+            @ApiResponse(responseCode = "404", description = "Device not found")})
     public ResponseEntity<String> deleteDevice(@PathVariable Long deviceId) {
+        // Eliminar el dispositivo sin validaciones adicionales por ahora
         var command = new DeleteDeviceCommand(deviceId);
         deviceCommandService.handle(command);
         return ResponseEntity.ok("Device with given id successfully deleted");

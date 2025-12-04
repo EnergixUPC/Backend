@@ -14,6 +14,7 @@ import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceCo
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.DeviceRepository;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.PreferencesRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * DeviceCommandServiceImpl
@@ -105,6 +106,7 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
     }
 
     @Override
+    @Transactional
     public void handle(DeleteDeviceCommand command) {
         Long deviceId = command.deviceId();
 
