@@ -7,6 +7,7 @@ import com.backendsems.iam.domain.services.UserQueryService;
 import com.backendsems.iam.infrastructure.persistence.jpa.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -29,5 +30,10 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Override
     public Optional<User> handle(GetUserByIdQuery query) {
         return userRepository.findById(query.userId());
+    }
+
+    @Override
+    public List<User> handleGetAll() {
+        return userRepository.findAll();
     }
 }

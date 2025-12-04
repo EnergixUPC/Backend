@@ -82,4 +82,12 @@ public class User extends AuditableAbstractAggregateRoot<User> {
     public boolean hasRole(String roleName) {
         return roles.stream().anyMatch(role -> role.getStringName().equals(roleName));
     }
+
+    /**
+     * Actualiza el email del usuario.
+     * @param newEmail El nuevo email.
+     */
+    public void updateEmail(String newEmail) {
+        this.email = newEmail;
+    }
 }

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -31,6 +32,7 @@ public class UserController {
      * @return the user
      */
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get user by ID", description = "Retrieve a user by their ID.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "User retrieved successfully."),
@@ -55,11 +57,15 @@ public class UserController {
      * @return list of users
      */
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get all users", description = "Retrieve a list of all users.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Users retrieved successfully.")})
     public ResponseEntity<?> getAllUsers() {
-        // Implementation to get all users
-        return ResponseEntity.ok().build();
+        var users = userQueryService.handleGetAll();
+        var userResources = users.stream()
+                .map(UserResourceFromEntityAssembler::toResourceFromEntity)
+                .toList();
+        return ResponseEntity.ok(userResources);
     }
 }
