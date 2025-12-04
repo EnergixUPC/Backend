@@ -146,8 +146,8 @@ public class ProfilesController {
      * @return Updated profile resource
      */
     @PutMapping("/{profileId}")
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Update profile by ID", description = "Update a user profile by its ID (Admin only)")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update profile by ID", description = "Update a user profile by its ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profile updated"),
             @ApiResponse(responseCode = "400", description = "Invalid input"),

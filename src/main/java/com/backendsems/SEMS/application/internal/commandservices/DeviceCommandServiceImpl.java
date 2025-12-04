@@ -7,7 +7,6 @@ import com.backendsems.SEMS.domain.model.commands.UpdatePreferencesCommand;
 import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
 import com.backendsems.SEMS.domain.model.entities.DevicePreference;
 import com.backendsems.SEMS.domain.exceptions.DeviceNotFoundException;
-import com.backendsems.SEMS.domain.exceptions.PreferencesNotFoundException;
 import com.backendsems.SEMS.domain.services.DeviceCommandService;
 import com.backendsems.SEMS.domain.services.DeviceConsumptionCalculationService;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
@@ -61,25 +60,46 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
 
     @Override
     public void handle(UpdatePreferencesCommand command) {
-        Long deviceId = command.deviceId();
-        Device device = deviceRepository.findById(deviceId)
-                .orElseThrow(() -> new DeviceNotFoundException(deviceId));
-        UserId userId = device.getUserId();
-        DevicePreference preferences = preferencesRepository.findByUserIdAndDeviceId(userId, deviceId)
-                .orElseThrow(() -> new PreferencesNotFoundException(userId, deviceId));
+        Long userId = command.userId();
+        
+        // Buscar preferencias existentes o crear nuevas (comportamiento upsert)
+        DevicePreference preferences = preferencesRepository.findByUserId(userId)
+                .orElseGet(() -> {
+                    // Crear nuevas preferencias con valores por defecto
+                    return new DevicePreference(
+                            userId,
+                            100.0, // threshold por defecto
+                            true,  // notificationEnabled por defecto
+                            command.habilitarMonitoreoEnergia(),
+                            command.recibirAlertasAltoConsumo(),
+                            command.monitorearCalefaccionRefrigeracion(),
+                            command.monitorearElectrodomesticosPrincipales(),
+                            command.monitorearElectronicos(),
+                            command.monitorearDispositivosCocina(),
+                            command.incluirIluminacionExterior(),
+                            command.rastrearEnergiaEspera(),
+                            command.emailsResumenDiario(),
+                            command.reportesProgresoSemanal(),
+                            command.sugerirAutomizacionesAhorro(),
+                            command.alertasDispositivosDesconectados()
+                    );
+                });
 
-        preferences.updateHabilitarMonitoreoEnergia(command.habilitarMonitoreoEnergia());
-        preferences.updateRecibirAlertasAltoConsumo(command.recibirAlertasAltoConsumo());
-        preferences.updateMonitorearCalefaccionRefrigeracion(command.monitorearCalefaccionRefrigeracion());
-        preferences.updateMonitorearElectrodomesticosPrincipales(command.monitorearElectrodomesticosPrincipales());
-        preferences.updateMonitorearElectronicos(command.monitorearElectronicos());
-        preferences.updateMonitorearDispositivosCocina(command.monitorearDispositivosCocina());
-        preferences.updateIncluirIluminacionExterior(command.incluirIluminacionExterior());
-        preferences.updateRastrearEnergiaEspera(command.rastrearEnergiaEspera());
-        preferences.updateEmailsResumenDiario(command.emailsResumenDiario());
-        preferences.updateReportesProgresoSemanal(command.reportesProgresoSemanal());
-        preferences.updateSugerirAutomizacionesAhorro(command.sugerirAutomizacionesAhorro());
-        preferences.updateAlertasDispositivosDesconectados(command.alertasDispositivosDesconectados());
+        // Si las preferencias ya existían, actualizarlas
+        if (preferences.getId() != null) {
+            preferences.updateHabilitarMonitoreoEnergia(command.habilitarMonitoreoEnergia());
+            preferences.updateRecibirAlertasAltoConsumo(command.recibirAlertasAltoConsumo());
+            preferences.updateMonitorearCalefaccionRefrigeracion(command.monitorearCalefaccionRefrigeracion());
+            preferences.updateMonitorearElectrodomesticosPrincipales(command.monitorearElectrodomesticosPrincipales());
+            preferences.updateMonitorearElectronicos(command.monitorearElectronicos());
+            preferences.updateMonitorearDispositivosCocina(command.monitorearDispositivosCocina());
+            preferences.updateIncluirIluminacionExterior(command.incluirIluminacionExterior());
+            preferences.updateRastrearEnergiaEspera(command.rastrearEnergiaEspera());
+            preferences.updateEmailsResumenDiario(command.emailsResumenDiario());
+            preferences.updateReportesProgresoSemanal(command.reportesProgresoSemanal());
+            preferences.updateSugerirAutomizacionesAhorro(command.sugerirAutomizacionesAhorro());
+            preferences.updateAlertasDispositivosDesconectados(command.alertasDispositivosDesconectados());
+        }
 
         preferencesRepository.save(preferences);
     }
@@ -92,9 +112,9 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
             throw new DeviceNotFoundException(deviceId);
         }
 
-        // Delete device, consumptions, preferences
-        consumptionRepository.deleteByDeviceId(deviceId); // Assuming custom method
-        preferencesRepository.deleteByDeviceId(deviceId); // Assuming custom method
+        // Delete device and consumptions
+        // Nota: Las preferencias son globales por usuario, no se eliminan al eliminar un dispositivo
+        consumptionRepository.deleteByDeviceId(deviceId);
         deviceRepository.deleteById(deviceId);
     }
 

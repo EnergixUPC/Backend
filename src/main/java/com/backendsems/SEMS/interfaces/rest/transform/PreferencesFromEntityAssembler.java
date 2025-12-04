@@ -17,8 +17,8 @@ public class PreferencesFromEntityAssembler {
     public static PreferencesResource toResource(DevicePreference entity) {
         return new PreferencesResource(
                 entity.getId(),
-                String.valueOf(entity.getUserId().id()),
-                entity.getDevice().getId(),
+                String.valueOf(entity.getUserId()),
+                null, // deviceId removido ya que las preferencias son globales por usuario
                 entity.getThreshold(),
                 entity.isNotificationEnabled(),
                 entity.isHabilitarMonitoreoEnergia(),

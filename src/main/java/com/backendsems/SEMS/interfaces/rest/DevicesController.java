@@ -133,29 +133,6 @@ public class DevicesController {
     }
 
     /**
-     * Actualizar preferencias de un dispositivo
-     * @param deviceId ID del dispositivo
-     * @param resource Recurso de actualización de preferencias
-     * @return Recurso de preferencias actualizado
-     */
-    @PutMapping("/{deviceId}/preferences")
-    @Operation(summary = "Update device preferences", description = "Update device preferences")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Preferences updated"),
-            @ApiResponse(responseCode = "404", description = "Preferences not found")})
-    public ResponseEntity<PreferencesResource> updatePreferences(@PathVariable Long deviceId, @RequestBody UpdatePreferencesResource resource) {
-        var command = UpdatePreferencesFromResourceAssembler.toCommand(resource);
-        deviceCommandService.handle(command);
-        var device = deviceQueryService.handle(new GetDeviceByIdQuery(deviceId));
-        if (device == null) return ResponseEntity.notFound().build();
-        var userId = device.getUserId();
-        var preferences = deviceQueryService.handle(new GetPreferencesByUserIdAndDeviceIdQuery(userId, deviceId));
-        if (preferences == null) return ResponseEntity.notFound().build();
-        var preferencesResource = PreferencesFromEntityAssembler.toResource(preferences);
-        return ResponseEntity.ok(preferencesResource);
-    }
-
-    /**
      * Obtener consumo de un dispositivo
      * @param deviceId ID del dispositivo
      * @return Lista de recursos de consumo
@@ -170,26 +147,6 @@ public class DevicesController {
                 .map(DeviceConsumptionFromEntityAssembler::toResource)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(consumptionResources);
-    }
-
-    /**
-     * Obtener preferencias de un dispositivo
-     * @param deviceId ID del dispositivo
-     * @return Recurso de preferencias
-     */
-    @GetMapping("/{deviceId}/preferences")
-    @Operation(summary = "Get device preferences", description = "Get device preferences")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Preferences found"),
-            @ApiResponse(responseCode = "404", description = "Preferences not found")})
-    public ResponseEntity<PreferencesResource> getPreferences(@PathVariable Long deviceId) {
-        var device = deviceQueryService.handle(new GetDeviceByIdQuery(deviceId));
-        if (device == null) return ResponseEntity.notFound().build();
-        var userId = device.getUserId();
-        var preferences = deviceQueryService.handle(new GetPreferencesByUserIdAndDeviceIdQuery(userId, deviceId));
-        if (preferences == null) return ResponseEntity.notFound().build();
-        var preferencesResource = PreferencesFromEntityAssembler.toResource(preferences);
-        return ResponseEntity.ok(preferencesResource);
     }
 
     /**
