@@ -36,6 +36,7 @@ public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
     public BearerAuthorizationRequestFilter(BearerTokenService tokenService, UserDetailsService userDetailsService) {
         this.tokenService = tokenService;
         this.userDetailsService = userDetailsService;
+        System.out.println("BearerAuthorizationRequestFilter created successfully");
     }
 
     /**
@@ -46,22 +47,35 @@ public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+        System.out.println("Filter doFilterInternal called for: " + request.getRequestURI());
         try {
+            System.out.println("=== FILTER EXECUTING FOR: " + request.getRequestURI() + " ===");
             LOGGER.info("Processing request to: {}", request.getRequestURI());
+            
+            String authHeader = request.getHeader("Authorization");
+            System.out.println("Authorization Header: " + authHeader);
+            
             String token = tokenService.getBearerTokenFrom(request);
+            System.out.println("Token extracted: " + (token != null ? "Present (length: " + token.length() + ")" : "Missing"));
             LOGGER.info("Token extracted: {}", token != null ? "Present" : "Missing");
+            
             if (token != null && tokenService.validateToken(token)) {
                 String username = tokenService.getUsernameFromToken(token);
+                System.out.println("Username from token: " + username);
                 LOGGER.info("Username from token: {}", username);
                 var userDetails = userDetailsService.loadUserByUsername(username);
                 LOGGER.info("User details loaded: {}", userDetails.getUsername());
                 SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request));
+                System.out.println("Authentication set successfully for user: " + username);
                 LOGGER.info("Authentication set successfully for user: {}", username);
             } else {
+                System.out.println("Token validation FAILED - Token is " + (token == null ? "null" : "invalid"));
                 LOGGER.warn("Token validation failed - Token is null or invalid");
             }
 
         } catch (Exception e) {
+            System.out.println("ERROR in filter: " + e.getMessage());
+            e.printStackTrace();
             LOGGER.error("Cannot set user authentication: {}", e.getMessage(), e);
         }
         filterChain.doFilter(request, response);
