@@ -46,6 +46,4 @@ public class ProfilesContextFacade implements com.backendsems.profiles.interface
         Profile profile = queryService.handle(query).orElse(null);
         return profile != null ? profile.getId() : null;
     }
-
-    // Otros métodos según necesidad
 }
