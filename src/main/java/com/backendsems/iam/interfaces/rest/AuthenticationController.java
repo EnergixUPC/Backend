@@ -19,15 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
- * AuthenticationController
- * <p>
- *     This controller is responsible for handling authentication requests.
- *     It exposes two endpoints:
- *     <ul>
- *         <li>POST /api/v1/authentication/sign-in</li>
- *         <li>POST /api/v1/authentication/sign-up</li>
- *     </ul>
- * </p>
+ * Controller for handling authentication-related endpoints.
  */
 @RestController
 @RequestMapping(value = "/api/v1/authentication", produces = MediaType.APPLICATION_JSON_VALUE)

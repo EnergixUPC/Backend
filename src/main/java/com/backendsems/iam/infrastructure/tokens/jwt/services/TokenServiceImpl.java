@@ -16,9 +16,7 @@ import java.util.Date;
 
 /**
  * Bearer Token Service Implementation.
- * <p>
  * This class implements the TokenService and BearerTokenService interfaces using JWT.
- * </p>
  */
 @Service
 public class TokenServiceImpl implements TokenService, BearerTokenService {
