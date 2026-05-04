@@ -20,9 +20,6 @@ public class Device extends AuditableAbstractAggregateRoot<Device> {
     private DeviceCategory category;
 
     @Embedded
-    private DeviceType type;
-
-    @Embedded
     private DeviceStatus status;
 
     @Embedded
@@ -37,11 +34,10 @@ public class Device extends AuditableAbstractAggregateRoot<Device> {
     public Device() {
     }
 
-    public Device(UserId userId, DeviceName name, DeviceCategory category, DeviceType type, DeviceStatus status, DeviceActivity activity, DeviceLocation location, boolean activo) {
+    public Device(UserId userId, DeviceName name, DeviceCategory category, DeviceStatus status, DeviceActivity activity, DeviceLocation location, boolean activo) {
         this.userId = userId;
         this.name = name;
         this.category = category;
-        this.type = type;
         this.status = status;
         this.activity = activity;
         this.location = location;
@@ -53,7 +49,6 @@ public class Device extends AuditableAbstractAggregateRoot<Device> {
                 userId,
                 new DeviceName(command.name()),
                 new DeviceCategory(command.category()),
-                new DeviceType(command.type()),
                 new DeviceStatus(command.status()),
                 new DeviceActivity(command.lastActivity()),
                 new DeviceLocation(command.location()),
