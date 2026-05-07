@@ -7,7 +7,6 @@ public record AddDeviceCommand(
         String name,
         String category,
         String status,
-        String lastActivity,
         String location,
         boolean active
 ) {

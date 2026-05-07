@@ -19,7 +19,6 @@ public class CreateDeviceFromResourceAssembler {
                 resource.name(),
                 resource.category(),
                 resource.status(),
-                resource.lastActivity(),
                 resource.location(),
                 resource.active()
         );
