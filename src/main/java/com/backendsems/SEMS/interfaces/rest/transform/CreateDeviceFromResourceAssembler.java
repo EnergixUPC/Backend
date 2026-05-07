@@ -3,14 +3,24 @@ package com.backendsems.SEMS.interfaces.rest.transform;
 import com.backendsems.SEMS.domain.model.commands.AddDeviceCommand;
 import com.backendsems.SEMS.interfaces.rest.resources.CreateDeviceResource;
 
+/**
+ * CreateDeviceFromResourceAssembler
+ * Ensamblador para convertir CreateDeviceResource a AddDeviceCommand.
+ */
 public class CreateDeviceFromResourceAssembler {
-    public static AddDeviceCommand toCommandFromResource(CreateDeviceResource resource) {
+
+    /**
+     * Convierte un CreateDeviceResource a AddDeviceCommand.
+     * @param resource El recurso de creación.
+     * @return AddDeviceCommand.
+     */
+    public static AddDeviceCommand toCommand(CreateDeviceResource resource) {
         return new AddDeviceCommand(
                 resource.name(),
                 resource.category(),
                 resource.status(),
                 resource.location(),
-                resource.userId()
+                resource.active()
         );
     }
 }

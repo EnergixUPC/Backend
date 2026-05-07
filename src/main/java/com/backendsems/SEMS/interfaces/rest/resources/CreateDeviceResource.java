@@ -9,6 +9,6 @@ public record CreateDeviceResource(
         String category,
         String status,
         String location,
-        Long userId
+        boolean active
 ) {
 }

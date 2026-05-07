@@ -8,6 +8,6 @@ public record AddDeviceCommand(
         String category,
         String status,
         String location,
-        Long userId
+        boolean active
 ) {
 }
