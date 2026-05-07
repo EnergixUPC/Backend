@@ -9,7 +9,6 @@ public record DeviceResource(
         String userId,
         String nombre,
         String categoria,
-        String tipo,
         String estado,
         String ultimaActividad,
         String ubicacion,
