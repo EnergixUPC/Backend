@@ -16,11 +16,10 @@ public class DeviceConsumptionCalculationServiceImpl implements DeviceConsumptio
 
     @Override
     public Double calculateDailyConsumption(Device device) {
-        // Lógica simplificada: basado en activity (ej. si está activo, consumo base)
-        double baseConsumption = 1.0; // KWH por día base
-        if (device.getActivity().activity().equals("high")) {
+        double baseConsumption = 1.0;
+        if (device.isActivo()) {
             baseConsumption *= 2.0;
-        } else if (device.getActivity().activity().equals("low")) {
+        } else {
             baseConsumption *= 0.5;
         }
         return baseConsumption;

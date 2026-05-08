@@ -21,7 +21,6 @@ public class DeviceFromEntityAssembler {
                 device.getName().name(),
                 device.getCategory().category(),
                 device.getStatus().status(),
-                device.getActivity().activity(),
                 device.getLocation().location(),
                 device.isActivo()
         );
