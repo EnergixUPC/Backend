@@ -18,7 +18,6 @@ public class TopDeviceResourceFromEntityAssembler {
         return new TopDeviceResource(
             entity.getDevice().getId(),
             entity.getDevice().getName().name(),
-            entity.getDevice().getType().type(),
             entity.getDevice().getCategory().category(),
             entity.getConsumo(),
             entity.getPeriodo()

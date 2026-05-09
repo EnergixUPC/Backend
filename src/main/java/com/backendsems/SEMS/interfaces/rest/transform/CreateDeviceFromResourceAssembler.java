@@ -18,9 +18,7 @@ public class CreateDeviceFromResourceAssembler {
         return new AddDeviceCommand(
                 resource.name(),
                 resource.category(),
-                resource.type(),
                 resource.status(),
-                resource.lastActivity(),
                 resource.location(),
                 resource.active()
         );

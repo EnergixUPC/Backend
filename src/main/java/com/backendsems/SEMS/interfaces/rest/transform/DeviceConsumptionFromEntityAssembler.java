@@ -19,7 +19,8 @@ public class DeviceConsumptionFromEntityAssembler {
                 entity.getId(),
                 entity.getDevice().getId(),
                 entity.getPeriodo(),
-                entity.getConsumo()
+                entity.getConsumo(),
+                entity.getCreatedAt()
         );
     }
 }

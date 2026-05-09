@@ -20,9 +20,7 @@ public class DeviceFromEntityAssembler {
                 String.valueOf(device.getUserId().id()),
                 device.getName().name(),
                 device.getCategory().category(),
-                device.getType().type(),
                 device.getStatus().status(),
-                device.getActivity().activity(),
                 device.getLocation().location(),
                 device.isActivo()
         );

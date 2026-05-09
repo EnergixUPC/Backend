@@ -7,7 +7,6 @@ package com.backendsems.SEMS.interfaces.rest.resources;
 public record TopDeviceResource(
     Long deviceId,
     String deviceName,
-    String deviceType,
     String deviceCategory,
     Double totalConsumption,
     String period

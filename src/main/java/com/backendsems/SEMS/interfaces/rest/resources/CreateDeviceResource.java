@@ -7,9 +7,7 @@ package com.backendsems.SEMS.interfaces.rest.resources;
 public record CreateDeviceResource(
         String name,
         String category,
-        String type,
         String status,
-        String lastActivity,
         String location,
         boolean active
 ) {
