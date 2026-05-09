@@ -1,5 +1,5 @@
 # Stage 1: Build the application
-FROM maven:3.9.9-eclipse-temurin-23 AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /app
 
@@ -14,7 +14,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime - Use Oracle JDK 25
-FROM container-registry.oracle.com/java/jdk:25
+FROM eclipse-temurin:25-jre
 
 WORKDIR /app
 
