@@ -15,7 +15,8 @@ public class UserResourceFromEntityAssembler {
             user.getName(),
             user.getLastName(),
             user.getPhone(),
-            user.getAddress()
+            user.getAddress(),
+            user.getPlan()
         );
     }
 }

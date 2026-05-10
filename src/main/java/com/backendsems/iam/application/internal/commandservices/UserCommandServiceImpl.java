@@ -5,6 +5,7 @@ import com.backendsems.iam.application.internal.outboundservices.tokens.TokenSer
 import com.backendsems.iam.domain.model.aggregates.User;
 import com.backendsems.iam.domain.model.commands.SignInCommand;
 import com.backendsems.iam.domain.model.commands.SignUpCommand;
+import com.backendsems.iam.domain.model.commands.UpdateUserPlanCommand;
 import com.backendsems.iam.domain.services.UserCommandService;
 import com.backendsems.iam.infrastructure.persistence.jpa.repositories.RoleRepository;
 import com.backendsems.iam.infrastructure.persistence.jpa.repositories.UserRepository;
@@ -137,5 +138,22 @@ public class UserCommandServiceImpl implements UserCommandService {
         
         System.out.println("=== Sign-up process completed ===");
         return userRepository.findByEmail(command.email());
+    }
+
+    /**
+     * Handle the update user plan command
+     * @param command the update user plan command containing the user id and the new plan
+     * @return the updated user
+     */
+    @Override
+    public Optional<User> handle(UpdateUserPlanCommand command) {
+        var user = userRepository.findById(command.userId());
+        if (user.isEmpty()) {
+            throw new RuntimeException("User not found");
+        }
+        var updatedUser = user.get();
+        updatedUser.updatePlan(command.plan());
+        userRepository.save(updatedUser);
+        return Optional.of(updatedUser);
     }
 }

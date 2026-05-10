@@ -1,12 +1,19 @@
 package com.backendsems.iam.interfaces.rest;
 
 import com.backendsems.iam.domain.model.queries.GetUserByIdQuery;
+import com.backendsems.iam.domain.model.commands.UpdateUserPlanCommand;
 import com.backendsems.iam.domain.services.UserQueryService;
+import com.backendsems.iam.domain.services.UserCommandService;
+import com.backendsems.iam.interfaces.rest.resources.UpdateUserPlanResource;
 import com.backendsems.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import com.backendsems.iam.interfaces.rest.resources.UserResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,9 +28,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserQueryService userQueryService;
+    private final UserCommandService userCommandService;
 
-    public UserController(UserQueryService userQueryService) {
+    public UserController(UserQueryService userQueryService, UserCommandService userCommandService) {
         this.userQueryService = userQueryService;
+        this.userCommandService = userCommandService;
     }
 
     /**
@@ -35,7 +44,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get user by ID", description = "Retrieve a user by their ID.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "User retrieved successfully."),
+            @ApiResponse(responseCode = "200", description = "User retrieved successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResource.class))),
             @ApiResponse(responseCode = "404", description = "User not found.")})
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
         try {
@@ -60,12 +69,39 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     @Operation(summary = "Get all users", description = "Retrieve a list of all users.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Users retrieved successfully.")})
+            @ApiResponse(responseCode = "200", description = "Users retrieved successfully.", content = @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = UserResource.class))))})
     public ResponseEntity<?> getAllUsers() {
         var users = userQueryService.handleGetAll();
         var userResources = users.stream()
                 .map(UserResourceFromEntityAssembler::toResourceFromEntity)
                 .toList();
         return ResponseEntity.ok(userResources);
+    }
+
+    /**
+     * Update user plan
+     * @param id the user id
+     * @param resource the update user plan resource
+     * @return the updated user
+     */
+    @PutMapping("/{id}/plan")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update user plan", description = "Updates the plan of a user by their ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User plan updated successfully.", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserResource.class))),
+            @ApiResponse(responseCode = "404", description = "User not found.")})
+    public ResponseEntity<?> updateUserPlan(@PathVariable Long id, @RequestBody UpdateUserPlanResource resource) {
+        try {
+            var command = new UpdateUserPlanCommand(id, resource.plan());
+            var user = userCommandService.handle(command);
+            if (user.isPresent()) {
+                var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(user.get());
+                return ResponseEntity.ok(userResource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
