@@ -3,6 +3,7 @@ package com.backendsems.SEMS.application.internal.commandservices;
 import com.backendsems.SEMS.domain.model.aggregates.Device;
 import com.backendsems.SEMS.domain.model.commands.AddDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.DeleteDeviceCommand;
+import com.backendsems.SEMS.domain.model.commands.UpdateDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.UpdatePreferencesCommand;
 import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
 import com.backendsems.SEMS.domain.model.entities.DevicePreference;
@@ -103,6 +104,15 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
         }
 
         preferencesRepository.save(preferences);
+    }
+
+    @Override
+    @Transactional
+    public Device handle(UpdateDeviceCommand command) {
+        Device device = deviceRepository.findById(command.deviceId())
+                .orElseThrow(() -> new DeviceNotFoundException(command.deviceId()));
+        device.update(command.name(), command.category(), command.status(), command.location(), command.active());
+        return deviceRepository.save(device);
     }
 
     @Override

@@ -1,12 +1,14 @@
 package com.backendsems.SEMS.interfaces.rest;
 
 import com.backendsems.SEMS.domain.model.commands.DeleteDeviceCommand;
+import com.backendsems.SEMS.domain.model.commands.UpdateDeviceCommand;
 import com.backendsems.SEMS.domain.model.queries.*;
 import com.backendsems.SEMS.domain.services.DeviceCommandService;
 import com.backendsems.SEMS.domain.services.DeviceQueryService;
 import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
 import com.backendsems.profiles.interfaces.acl.ProfilesContextFacade;
 import com.backendsems.SEMS.interfaces.rest.resources.*;
+import com.backendsems.SEMS.interfaces.rest.resources.UpdateDeviceResource;
 import com.backendsems.SEMS.interfaces.rest.transform.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -147,6 +149,27 @@ public class DevicesController {
                 .map(DeviceConsumptionFromEntityAssembler::toResource)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(consumptionResources);
+    }
+
+    /**
+     * Actualizar atributos de un dispositivo
+     * @param deviceId ID del dispositivo
+     * @param resource Campos a actualizar (todos opcionales)
+     * @return Recurso del dispositivo actualizado
+     */
+    @PatchMapping("/{deviceId}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update device", description = "Update device attributes (partial update)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Device updated"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Device not found")})
+    public ResponseEntity<DeviceResource> updateDevice(
+            @PathVariable Long deviceId,
+            @RequestBody UpdateDeviceResource resource) {
+        var command = UpdateDeviceFromResourceAssembler.toCommand(deviceId, resource);
+        var device = deviceCommandService.handle(command);
+        return ResponseEntity.ok(DeviceFromEntityAssembler.toResource(device));
     }
 
     /**
