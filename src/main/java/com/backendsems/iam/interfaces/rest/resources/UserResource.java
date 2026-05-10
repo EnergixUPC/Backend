@@ -9,5 +9,6 @@ public record UserResource(
     String name,
     String lastName,
     String phone,
-    String address
+    String address,
+    String plan
 ) {}

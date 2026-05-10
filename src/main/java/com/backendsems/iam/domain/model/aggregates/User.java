@@ -34,6 +34,8 @@ public class User extends AuditableAbstractAggregateRoot<User> {
 
     private String address;
 
+    private String plan = "basic";
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
@@ -89,5 +91,13 @@ public class User extends AuditableAbstractAggregateRoot<User> {
      */
     public void updateEmail(String newEmail) {
         this.email = newEmail;
+    }
+
+    /**
+     * Actualiza el plan del usuario.
+     * @param plan El nuevo plan.
+     */
+    public void updatePlan(String plan) {
+        this.plan = plan;
     }
 }
