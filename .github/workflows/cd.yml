@@ -31,3 +31,6 @@ jobs:
           context: .
           push: true
           tags: ${{ env.IMAGE }}
+
+      - name: Deploy on render
+        run: curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}"
