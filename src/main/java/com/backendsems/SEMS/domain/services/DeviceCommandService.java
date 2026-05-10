@@ -1,7 +1,9 @@
 package com.backendsems.SEMS.domain.services;
 
+import com.backendsems.SEMS.domain.model.aggregates.Device;
 import com.backendsems.SEMS.domain.model.commands.AddDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.DeleteDeviceCommand;
+import com.backendsems.SEMS.domain.model.commands.UpdateDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.UpdatePreferencesCommand;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 
@@ -24,6 +26,13 @@ public interface DeviceCommandService {
      * @param command El comando UpdatePreferencesCommand.
      */
     void handle(UpdatePreferencesCommand command);
+
+    /**
+     * Maneja el comando para actualizar un dispositivo.
+     * @param command El comando UpdateDeviceCommand.
+     * @return El dispositivo actualizado.
+     */
+    Device handle(UpdateDeviceCommand command);
 
     /**
      * Maneja el comando para eliminar un dispositivo.

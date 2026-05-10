@@ -54,4 +54,12 @@ public class Device extends AuditableAbstractAggregateRoot<Device> {
     public void updateStatus(DeviceStatus status) {
         this.status = status;
     }
+
+    public void update(String name, String category, String status, String location, Boolean active) {
+        if (name != null && !name.isBlank())       this.name     = new DeviceName(name);
+        if (category != null && !category.isBlank()) this.category = new DeviceCategory(category);
+        if (status != null && !status.isBlank())   this.status   = new DeviceStatus(status);
+        if (location != null && !location.isBlank()) this.location = new DeviceLocation(location);
+        if (active != null)                        this.activo   = active;
+    }
 }
