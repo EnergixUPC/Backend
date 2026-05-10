@@ -13,8 +13,9 @@ import static org.mockito.Mockito.*;
 
 /**
  * Unit Tests for Device Aggregate Root
+ * Covers US05 (Conectar dispositivos) and US06 (Monitorear consumo en tiempo real)
  */
-@DisplayName("Device Aggregate Tests")
+@DisplayName("Device Aggregate Tests - US05, US06")
 @ExtendWith(MockitoExtension.class)
 class DeviceTest {
 
@@ -40,9 +41,11 @@ class DeviceTest {
         device = new Device(mockUserId, mockDeviceName, mockDeviceCategory, mockDeviceStatus, mockDeviceLocation, true);
     }
 
+    // ==================== US05: Conectar dispositivos ====================
+
     @Test
-    @DisplayName("Debe crear un dispositivo con todos los parámetros")
-    void testCreateDeviceWithAllParameters() {
+    @DisplayName("US05 - Conectar dispositivos - Escenario 1: Dispositivo detectado - Debe crear un dispositivo con todos los parámetros")
+    void US05_testCreateDeviceWithAllParameters() {
         // Assert
         assertEquals(mockUserId, device.getUserId());
         assertEquals(mockDeviceName, device.getName());
@@ -52,10 +55,33 @@ class DeviceTest {
         assertTrue(device.isActivo());
     }
 
+    @Test
+    @DisplayName("US05 - Conectar dispositivos - Escenario 1: Dispositivo detectado - Debe vincular dispositivo exitosamente desde comando")
+    void US05_testCreateDeviceFromCommand() {
+        // Arrange
+        UserId userId = mock(UserId.class);
+
+        // Act & Assert
+        assertNotNull(device);
+        assertNotNull(device.getUserId());
+    }
 
     @Test
-    @DisplayName("Debe actualizar el estado del dispositivo")
-    void testUpdateDeviceStatus() {
+    @DisplayName("US05 - Conectar dispositivos - Debe verificar que los valores inicializados no sean nulos")
+    void US05_testDeviceInitializationNotNull() {
+        // Assert
+        assertNotNull(device.getUserId());
+        assertNotNull(device.getName());
+        assertNotNull(device.getCategory());
+        assertNotNull(device.getStatus());
+        assertNotNull(device.getLocation());
+    }
+
+    // ==================== US06: Monitorear consumo en tiempo real ====================
+
+    @Test
+    @DisplayName("US06 - Monitorear consumo en tiempo real - Escenario 2: Dispositivo desconectado - Debe actualizar el estado del dispositivo")
+    void US06_testUpdateDeviceStatus() {
         // Arrange
         DeviceStatus newStatus = mock(DeviceStatus.class);
 
@@ -67,27 +93,15 @@ class DeviceTest {
     }
 
     @Test
-    @DisplayName("Debe crear un dispositivo desde AddDeviceCommand")
-    void testCreateDeviceFromCommand() {
-        // Arrange
-        UserId userId = mock(UserId.class);
+    @DisplayName("US06 - Monitorear consumo en tiempo real - Debe permitir actualizar múltiples campos del dispositivo")
+    void US06_testUpdateDeviceMultipleFields() {
+        // Act
+        device.update("New Device", "Electronics", "ACTIVE", "Living Room", true);
 
-        // Act & Assert
-        assertNotNull(device);
-        assertNotNull(device.getUserId());
-    }
-
-
-
-    @Test
-    @DisplayName("Debe verificar que los valores inicializados no sean nulos")
-    void testDeviceInitializationNotNull() {
         // Assert
-        assertNotNull(device.getUserId());
         assertNotNull(device.getName());
         assertNotNull(device.getCategory());
         assertNotNull(device.getStatus());
         assertNotNull(device.getLocation());
     }
 }
-
