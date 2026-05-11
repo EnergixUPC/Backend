@@ -69,26 +69,49 @@ public class UserCommandServiceImplTest {
     @Test
     @DisplayName("US01 - Registro de cuenta - Escenario 1: Registro válido - Debe crear cuenta con datos completos y válidos")
     void US01_handle_SignUpCommand_ReturnsUserOptional_WhenSuccessful() {
+
         // Arrange
         Role defaultRole = new Role(Roles.ROLE_USER);
-        when(roleRepository.findByName(Roles.ROLE_USER)).thenReturn(Optional.of(defaultRole));
-        when(hashingService.encode(anyString())).thenReturn("hashed_password_123");
 
-        User expectedUser = new User("test@energix.com", "hashed_password_123", "Joan", "Teves", "987654321", "Santa Catalina", List.of(defaultRole));
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(expectedUser));
+        when(roleRepository.findByName(Roles.ROLE_USER))
+                .thenReturn(Optional.of(defaultRole));
 
+        when(hashingService.encode(anyString()))
+                .thenReturn("hashed_password_123");
 
+        User expectedUser = new User(
+                "test@energix.com",
+                "hashed_password_123",
+                "Joan",
+                "Teves",
+                "987654321",
+                "Santa Catalina",
+                List.of(defaultRole)
+        );
+
+        when(userRepository.findByEmail(anyString()))
+                .thenReturn(Optional.of(expectedUser));
+
+        // Act
         Optional<User> result = userCommandService.handle(signUpCommand);
 
-
+        // Assert
         assertTrue(result.isPresent());
 
         assertEquals("test@energix.com", result.get().getEmail());
 
-        verify(userRepository, times(1)).save(any(User.class));
-        verify(profilesContextFacade, times(1)).createProfile(
-                "Joan", "Teves", "test@energix.com", "hashed_password_123", "987654321", "Santa Catalina"
-        );
+        verify(userRepository, times(1))
+                .save(any(User.class));
+
+        verify(profilesContextFacade, times(1))
+                .createProfile(
+                        "Joan",
+                        "Teves",
+                        "test@energix.com",
+                        "hashed_password_123",
+                        "987654321",
+                        "Santa Catalina"
+                );
     }
 
     @Test

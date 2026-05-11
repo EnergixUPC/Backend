@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Test-Path C:\\\\Users\\\\nanak\\\\Dev\\\\experimentos\\\\Backend\\\\src\\\\test\\\\resources *)"
+    ]
+  }
+}

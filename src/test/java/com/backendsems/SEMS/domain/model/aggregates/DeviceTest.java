@@ -58,12 +58,16 @@ class DeviceTest {
     @Test
     @DisplayName("US05 - Conectar dispositivos - Escenario 1: Dispositivo detectado - Debe vincular dispositivo exitosamente desde comando")
     void US05_testCreateDeviceFromCommand() {
+
         // Arrange
         UserId userId = mock(UserId.class);
 
-        // Act & Assert
-        assertNotNull(device);
-        assertNotNull(device.getUserId());
+        // Act
+        Device createdDevice = device;
+
+        // Assert
+        assertNotNull(createdDevice);
+        assertNotNull(createdDevice.getUserId());
     }
 
     @Test
