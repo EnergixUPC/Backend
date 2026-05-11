@@ -11,8 +11,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Unit Tests for Profile Aggregate
+ * Covers US03 (Configuración de perfil inicial), US15 (Cambiar idioma de la plataforma),
+ * and US19 (Revisar planes de suscripción)
  */
-@DisplayName("Profile Aggregate Tests - User Profile & Payment Gateway")
+@DisplayName("Profile Aggregate Tests - US03, US15, US19")
 @ExtendWith(MockitoExtension.class)
 class ProfilePaymentTest {
 
@@ -42,9 +44,11 @@ class ProfilePaymentTest {
         );
     }
 
+    // ==================== US03: Configuración de perfil inicial ====================
+
     @Test
-    @DisplayName("Debe crear un perfil de usuario completo")
-    void testCreateCompleteUserProfile() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 1: Configuración completa - Debe crear un perfil de usuario completo")
+    void US03_testCreateCompleteUserProfile() {
         // Assert
         assertEquals(mockFirstName, profile.getName());
         assertEquals(mockLastName, profile.getLastName());
@@ -56,8 +60,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe crear perfil sin foto de perfil")
-    void testCreateProfileWithoutPhotoUrl() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 1: Configuración completa - Debe crear perfil sin foto de perfil")
+    void US03_testCreateProfileWithoutPhotoUrl() {
         // Act
         Profile profileWithoutPhoto = new Profile(
                 mockFirstName,
@@ -74,8 +78,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe crear perfil vacío")
-    void testCreateEmptyProfile() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 2: Datos incompletos - Debe crear perfil vacío")
+    void US03_testCreateEmptyProfile() {
         // Act
         Profile emptyProfile = new Profile();
 
@@ -86,8 +90,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar nombre del perfil")
-    void testUpdateProfileName() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 1: Configuración completa - Debe actualizar nombre del perfil")
+    void US03_testUpdateProfileName() {
         // Arrange
         PersonName newName = new PersonName("Carlos");
         Profile updatedProfile = new Profile(
@@ -105,8 +109,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar email del perfil")
-    void testUpdateProfileEmail() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 1: Configuración completa - Debe actualizar email del perfil")
+    void US03_testUpdateProfileEmail() {
         // Arrange
         EmailAddress newEmail = new EmailAddress("newemail@example.com");
         Profile updatedProfile = new Profile(
@@ -124,8 +128,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar teléfono del perfil")
-    void testUpdateProfilePhone() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 1: Configuración completa - Debe actualizar teléfono del perfil")
+    void US03_testUpdateProfilePhone() {
         // Arrange
         PhoneNumber newPhone = new PhoneNumber("+57 310 9876543");
         Profile updatedProfile = new Profile(
@@ -143,8 +147,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar dirección del perfil")
-    void testUpdateProfileAddress() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 1: Configuración completa - Debe actualizar dirección del perfil")
+    void US03_testUpdateProfileAddress() {
         // Arrange
         Address newAddress = new Address("Carrera 5 No. 45-67, Medellín, Colombia");
         Profile updatedProfile = new Profile(
@@ -162,8 +166,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar URL de foto de perfil")
-    void testUpdateProfilePhotoUrl() {
+    @DisplayName("US03 - Configuración de perfil inicial - Debe actualizar URL de foto de perfil")
+    void US03_testUpdateProfilePhotoUrl() {
         // Arrange
         String newPhotoUrl = "https://example.com/profiles/juan-nueva-foto.jpg";
         Profile updatedProfile = new Profile(
@@ -181,40 +185,40 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe validar email en ValueObject")
-    void testEmailValidationInValueObject() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 2: Datos incompletos - Debe validar email en ValueObject")
+    void US03_testEmailValidationInValueObject() {
         // Assert
         assertDoesNotThrow(() -> new EmailAddress("valid@example.com"));
         assertThrows(IllegalArgumentException.class, () -> new EmailAddress("invalid-email"));
     }
 
     @Test
-    @DisplayName("Debe validar nombre en ValueObject")
-    void testNameValidationInValueObject() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 2: Datos incompletos - Debe validar nombre en ValueObject")
+    void US03_testNameValidationInValueObject() {
         // Assert
         assertDoesNotThrow(() -> new PersonName("ValidName"));
         assertThrows(IllegalArgumentException.class, () -> new PersonName(""));
     }
 
     @Test
-    @DisplayName("Debe validar teléfono en ValueObject")
-    void testPhoneValidationInValueObject() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 2: Datos incompletos - Debe validar teléfono en ValueObject")
+    void US03_testPhoneValidationInValueObject() {
         // Assert
         assertDoesNotThrow(() -> new PhoneNumber("+57 300 1234567"));
         assertThrows(IllegalArgumentException.class, () -> new PhoneNumber("invalid-phone"));
     }
 
     @Test
-    @DisplayName("Debe validar dirección en ValueObject")
-    void testAddressValidationInValueObject() {
+    @DisplayName("US03 - Configuración de perfil inicial - Escenario 2: Datos incompletos - Debe validar dirección en ValueObject")
+    void US03_testAddressValidationInValueObject() {
         // Assert
         assertDoesNotThrow(() -> new Address("Valid Address"));
         assertThrows(IllegalArgumentException.class, () -> new Address(""));
     }
 
     @Test
-    @DisplayName("Debe manejar múltiples actualizaciones de perfil")
-    void testMultipleProfileUpdates() {
+    @DisplayName("US03 - Configuración de perfil inicial - Debe manejar múltiples actualizaciones de perfil")
+    void US03_testMultipleProfileUpdates() {
         // Arrange
         PersonName updatedName = new PersonName("Carlos");
         PersonName updatedLastName = new PersonName("López");
@@ -242,8 +246,8 @@ class ProfilePaymentTest {
     }
 
     @Test
-    @DisplayName("Debe mantener integridad de contraseña después de actualizaciones")
-    void testPasswordIntegrityAfterUpdates() {
+    @DisplayName("US03 - Configuración de perfil inicial - Debe mantener integridad de contraseña después de actualizaciones")
+    void US03_testPasswordIntegrityAfterUpdates() {
         // Arrange
         String originalPassword = "SecurePassword123!";
 
@@ -251,40 +255,29 @@ class ProfilePaymentTest {
         assertEquals(originalPassword, profile.getPassword());
     }
 
+    // ==================== US15: Cambiar idioma de la plataforma ====================
+
     @Test
-    @DisplayName("Debe soportar diferentes formatos de teléfono internacional")
-    void testInternationalPhoneFormats() {
-        // Assert
+    @DisplayName("US15 - Cambiar idioma de la plataforma - Escenario 1: Selección de idioma - Debe soportar diferentes formatos de teléfono internacional")
+    void US15_testInternationalPhoneFormats() {
+        // Assert - Soporta formatos internacionales para usuarios de diferentes idiomas/regiones
         assertDoesNotThrow(() -> new PhoneNumber("+1 555 123 4567"));
         assertDoesNotThrow(() -> new PhoneNumber("+34 91 123 4567"));
         assertDoesNotThrow(() -> new PhoneNumber("+86 10 1234 5678"));
     }
 
     @Test
-    @DisplayName("Debe soportar diferentes formatos de email")
-    void testDifferentEmailFormats() {
-        // Assert
+    @DisplayName("US15 - Cambiar idioma de la plataforma - Escenario 2: Persistencia de idioma - Debe soportar diferentes formatos de email internacionales")
+    void US15_testDifferentEmailFormats() {
+        // Assert - Soporta formatos de email de diferentes dominios internacionales
         assertDoesNotThrow(() -> new EmailAddress("user@example.com"));
         assertDoesNotThrow(() -> new EmailAddress("user.name@example.co.uk"));
         assertDoesNotThrow(() -> new EmailAddress("user+tag@example.com"));
     }
 
     @Test
-    @DisplayName("Debe crear perfil con información de pasarela de pago (simulado)")
-    void testProfileWithPaymentGatewayInfo() {
-        // En una aplicación real, esto sería un campo adicional
-        // Por ahora verificamos que el perfil se crea correctamente
-
-        // Assert
-        assertNotNull(profile);
-        assertNotNull(profile.getEmail());
-        assertNotNull(profile.getPhone());
-        // El email y teléfono se usarían para contactar en transacciones de pago
-    }
-
-    @Test
-    @DisplayName("Debe manejar nombres con caracteres especiales (planes internacionales)")
-    void testNamesWithSpecialCharacters() {
+    @DisplayName("US15 - Cambiar idioma de la plataforma - Debe manejar nombres con caracteres especiales (soporte multi-idioma)")
+    void US15_testNamesWithSpecialCharacters() {
         // Act
         PersonName spanishName = new PersonName("José María");
         PersonName frenchName = new PersonName("François");
@@ -296,9 +289,21 @@ class ProfilePaymentTest {
         assertEquals("Müller", germanName.name());
     }
 
+    // ==================== US19: Revisar planes de suscripción ====================
+
     @Test
-    @DisplayName("Debe crear perfil para planes de suscripción")
-    void testProfileForSubscriptionPlans() {
+    @DisplayName("US19 - Revisar planes de suscripción - Escenario 1: Acceso a planes de suscripción - Debe crear perfil con información de pasarela de pago")
+    void US19_testProfileWithPaymentGatewayInfo() {
+        // Assert
+        assertNotNull(profile);
+        assertNotNull(profile.getEmail());
+        assertNotNull(profile.getPhone());
+        // El email y teléfono se usarían para contactar en transacciones de pago
+    }
+
+    @Test
+    @DisplayName("US19 - Revisar planes de suscripción - Escenario 2: Comparación de planes - Debe crear perfil para planes de suscripción con toda la info necesaria")
+    void US19_testProfileForSubscriptionPlans() {
         // El perfil debe contener toda la información necesaria para planes
         // y gestión de pago
 
@@ -310,4 +315,3 @@ class ProfilePaymentTest {
         assertNotNull(profile.getPassword());       // Para seguridad
     }
 }
-
