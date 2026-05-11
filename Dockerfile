@@ -13,10 +13,15 @@ COPY src ./src
 # Build the application
 RUN mvn clean package -DskipTests
 
-# Stage 2: Runtime - Use Oracle JDK 25
+# Stage 2: Runtime - Use Eclipse Temurin JRE 25
 FROM eclipse-temurin:25-jre
 
 WORKDIR /app
+
+# --- NUEVO: Configurar la zona horaria a Lima, Perú ---
+ENV TZ=America/Lima
+# Opcional pero recomendado: configurar el sistema operativo del contenedor
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # Copy the built JAR from the build stage
 COPY --from=build /app/target/backend-sems-0.0.1-SNAPSHOT.jar app.jar
