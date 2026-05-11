@@ -25,4 +25,4 @@ public class DeviceFromEntityAssembler {
                 device.isActivo()
         );
     }
-}
+}   
