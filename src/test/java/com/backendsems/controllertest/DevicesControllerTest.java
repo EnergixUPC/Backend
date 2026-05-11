@@ -90,12 +90,21 @@ public class DevicesControllerTest {
 
     @Test
     void getAllDevices_Success() {
+        // 1. Add a mock authorization header string
+        String authHeader = "Bearer dummy.token";
+
+        // 2. Mock the token parsing (optional but recommended if your controller uses it to fetch specific user devices)
+        Mockito.when(tokenService.getEmailFromToken("dummy.token")).thenReturn("user@test.com");
+        Mockito.when(profilesContextFacade.fetchProfileIdByEmail("user@test.com")).thenReturn(1L);
+
         Device device = new Device(new UserId(1L), new DeviceName("Sensor"), new DeviceCategory("HVAC"),
                 new DeviceStatus("Online"), new DeviceLocation("Living Room"), true);
+
         Mockito.when(deviceQueryService.handle(any(GetAllDevicesQuery.class)))
                 .thenReturn(Collections.singletonList(device));
 
-        ResponseEntity<List<DeviceResource>> response = devicesController.getAllDevices();
+        // 3. Pass the authHeader to the controller method
+        ResponseEntity<List<DeviceResource>> response = devicesController.getAllDevices(authHeader);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
