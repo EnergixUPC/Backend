@@ -44,3 +44,6 @@ jobs:
           SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/mysql?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
           SPRING_DATASOURCE_USERNAME: mysql
           SPRING_DATASOURCE_PASSWORD: mysql
+          # ADD THESE TWO LINES BELOW:
+          SPRING_DATASOURCE_DRIVER_CLASS_NAME: com.mysql.cj.jdbc.Driver
+          SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
