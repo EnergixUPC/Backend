@@ -4,6 +4,7 @@ import com.backendsems.SEMS.domain.model.commands.AddConsumptionCommand;
 import com.backendsems.SEMS.domain.model.entities.Consumption;
 import com.backendsems.SEMS.domain.model.entities.ConsumptionStatus;
 import com.backendsems.SEMS.domain.model.events.HighConsumptionDetectedEvent;
+import com.backendsems.SEMS.domain.model.events.ConsumptionRecordedEvent;
 import com.backendsems.SEMS.domain.services.ConsumptionCommandService;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.ConsumptionRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -50,7 +51,10 @@ public class ConsumptionCommandServiceImpl implements ConsumptionCommandService 
             );
         }
 
+        eventPublisher.publishEvent(new ConsumptionRecordedEvent(command.deviceId(), command.consumption(), command.calculatedAt()));
+
         return saved.getId();
     }
 }
+
 
