@@ -60,6 +60,13 @@ public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
             LOGGER.info("Token extracted: {}", token != null ? "Present" : "Missing");
             
             if (token != null && tokenService.validateToken(token)) {
+                if (tokenService.isTokenRevoked(token)) {
+                    System.out.println("Token is revoked: " + token);
+                    LOGGER.warn("Token is revoked");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    return;
+                }
+                
                 String username = tokenService.getUsernameFromToken(token);
                 System.out.println("Username from token: " + username);
                 LOGGER.info("Username from token: {}", username);

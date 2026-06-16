@@ -1,6 +1,8 @@
 package com.backendsems.iam.infrastructure.tokens.jwt.services;
 
 import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
+import com.backendsems.iam.domain.model.entities.RevokedToken;
+import com.backendsems.iam.infrastructure.persistence.jpa.repositories.RevokedTokenRepository;
 import com.backendsems.iam.infrastructure.tokens.jwt.BearerTokenService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -28,6 +30,12 @@ public class TokenServiceImpl implements TokenService, BearerTokenService {
 
     @Value("${authorization.jwt.expiration}")
     private int jwtExpirationMs;
+
+    private final RevokedTokenRepository revokedTokenRepository;
+
+    public TokenServiceImpl(RevokedTokenRepository revokedTokenRepository) {
+        this.revokedTokenRepository = revokedTokenRepository;
+    }
 
     @Override
     public String getEmailFromToken(String token) {
@@ -70,17 +78,26 @@ public class TokenServiceImpl implements TokenService, BearerTokenService {
     public String getBearerTokenFrom(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null) {
-            // Si ya tiene el prefijo "Bearer ", lo quitamos
             if (bearerToken.startsWith("Bearer ")) {
                 return bearerToken.substring(7);
             }
-            // Si es solo el token (Swagger a veces lo envía así), lo retornamos directamente
-            // Validamos que tenga formato de JWT (tres partes separadas por puntos)
             if (bearerToken.split("\\.").length == 3) {
                 return bearerToken;
             }
         }
         return null;
+    }
+
+    @Override
+    public void revokeToken(String token) {
+        if (!isTokenRevoked(token)) {
+            revokedTokenRepository.save(new RevokedToken(token));
+        }
+    }
+
+    @Override
+    public boolean isTokenRevoked(String token) {
+        return revokedTokenRepository.existsByToken(token);
     }
 
     private Key key() {

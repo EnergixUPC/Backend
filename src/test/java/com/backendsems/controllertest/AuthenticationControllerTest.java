@@ -1,5 +1,6 @@
 package com.backendsems.controllertest;
 
+import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
 import com.backendsems.iam.domain.model.aggregates.User;
 import com.backendsems.iam.domain.model.commands.SignInCommand;
 import com.backendsems.iam.domain.model.commands.SignUpCommand;
@@ -25,12 +26,16 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class AuthenticationControllerTest {
 
     @Mock
     private UserCommandService userCommandService;
+
+    @Mock
+    private TokenService tokenService;
 
     @InjectMocks
     private AuthenticationController authenticationController;
@@ -87,6 +92,31 @@ public class AuthenticationControllerTest {
                 .thenReturn(Optional.empty());
 
         ResponseEntity<UserResource> response = authenticationController.signUp(resource);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void signOut_Success() {
+        String token = "dummy.token";
+        String authHeader = "Bearer " + token;
+
+        ResponseEntity<?> response = authenticationController.signOut(authHeader);
+
+        verify(tokenService).revokeToken(token);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void signOut_BadRequest_NullHeader() {
+        ResponseEntity<?> response = authenticationController.signOut(null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void signOut_BadRequest_InvalidHeaderFormat() {
+        ResponseEntity<?> response = authenticationController.signOut("Basic dummy.token");
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }

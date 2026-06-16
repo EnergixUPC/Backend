@@ -37,4 +37,17 @@ public interface BearerTokenService {
      * @return the token
      */
     String getBearerTokenFrom(HttpServletRequest request);
+
+    /**
+     * Revoke a token.
+     * @param token the token
+     */
+    void revokeToken(String token);
+
+    /**
+     * Check if a token is revoked.
+     * @param token the token
+     * @return true if revoked, false otherwise
+     */
+    boolean isTokenRevoked(String token);
 }
