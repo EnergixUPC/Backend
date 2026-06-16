@@ -16,7 +16,8 @@ public class ProfileResourceFromEntityAssembler {
                 profile.getEmail().address(),
                 profile.getPhone().number(),
                 profile.getAddress().address(),
-                profile.getProfilePhotoUrl()
+                profile.getProfilePhotoUrl(),
+                profile.getLanguage()
         );
     }
 }

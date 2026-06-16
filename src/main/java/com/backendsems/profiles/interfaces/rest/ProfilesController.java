@@ -183,4 +183,41 @@ public class ProfilesController {
         var profileResource = ProfileResourceFromEntityAssembler.toResourceFromEntity(updatedProfile.get());
         return ResponseEntity.ok(profileResource);
     }
+
+    /**
+     * Update current user language
+     * @param resource Update profile language resource
+     * @param authHeader Authorization header
+     * @return Updated profile resource
+     */
+    @PatchMapping("/me/language")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update current user language", description = "Update the language preference of the currently authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Language updated"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "404", description = "Profile not found")})
+    public ResponseEntity<ProfileResource> updateCurrentUserLanguage(
+            @RequestBody com.backendsems.profiles.interfaces.rest.resources.UpdateProfileLanguageResource resource,
+            @RequestHeader("Authorization") String authHeader) {
+        
+        String token = authHeader.replace("Bearer ", "");
+        String email = tokenService.getEmailFromToken(token);
+        
+        var profile = profileQueryService.handle(new GetProfileByEmailQuery(email));
+        if (profile.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        var command = com.backendsems.profiles.interfaces.rest.transform.UpdateProfileLanguageCommandFromResourceAssembler.toCommandFromResource(profile.get().getId(), resource);
+        profileCommandService.handle(command);
+        
+        var updatedProfile = profileQueryService.handle(new GetProfileByIdQuery(profile.get().getId()));
+        if (updatedProfile.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        var profileResource = ProfileResourceFromEntityAssembler.toResourceFromEntity(updatedProfile.get());
+        return ResponseEntity.ok(profileResource);
+    }
 }
