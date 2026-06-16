@@ -89,4 +89,19 @@ public interface DeviceQueryService {
      * @return Lista de objetos con fecha y suma total por día.
      */
     List<Object[]> handleDailySummary(GetWeeklyConsumptionByUserQuery query);
+    /**
+     * Maneja la query para obtener el consumo mensual agrupado de un usuario por fecha.
+     * @param query La query GetMonthlyConsumptionByUserQuery.
+     * @return Lista de objetos con fecha y suma total por día.
+     */
+    List<Object[]> handleMonthlySummary(GetMonthlyConsumptionByUserQuery query);
+
+    /**
+     * Maneja la query para obtener datos para comparar.
+     * @param userId El userId
+     * @param start inicio
+     * @param end fin
+     * @return Lista de objetos
+     */
+    List<Object[]> handleCustomSummary(com.backendsems.SEMS.domain.model.valueobjects.UserId userId, java.time.LocalDate start, java.time.LocalDate end);
 }

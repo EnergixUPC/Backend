@@ -129,4 +129,31 @@ public class DeviceQueryServiceImpl implements DeviceQueryService {
             weekEnd
         );
     }
+    @Override
+    public List<Object[]> handleMonthlySummary(
+        GetMonthlyConsumptionByUserQuery query
+    ) {
+        LocalDate today = LocalDate.now();
+        LocalDate monthStart = today.withDayOfMonth(1);
+        LocalDate monthEnd = today.withDayOfMonth(today.lengthOfMonth());
+
+        return consumptionRepository.findDailyConsumptionSumByUserIdAndDateRange(
+            query.userId(),
+            monthStart,
+            monthEnd
+        );
+    }
+
+    @Override
+    public List<Object[]> handleCustomSummary(
+        com.backendsems.SEMS.domain.model.valueobjects.UserId userId,
+        LocalDate start,
+        LocalDate end
+    ) {
+        return consumptionRepository.findDailyConsumptionSumByUserIdAndDateRange(
+            userId,
+            start,
+            end
+        );
+    }
 }

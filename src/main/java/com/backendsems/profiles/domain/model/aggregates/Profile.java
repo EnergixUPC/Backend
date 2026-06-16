@@ -41,10 +41,13 @@ public class Profile extends AuditableAbstractAggregateRoot<Profile> {
     @Column(name = "profile_photo_url")
     private String profilePhotoUrl;
 
+    @Column(name = "language")
+    private String language;
+
     public Profile() {
     }
 
-    public Profile(PersonName name, PersonName lastName, EmailAddress email, String password, PhoneNumber phone, Address address, String profilePhotoUrl) {
+    public Profile(PersonName name, PersonName lastName, EmailAddress email, String password, PhoneNumber phone, Address address, String profilePhotoUrl, String language) {
         this.name = name;
         this.lastName = lastName;
         this.email = email;
@@ -52,6 +55,7 @@ public class Profile extends AuditableAbstractAggregateRoot<Profile> {
         this.phone = phone;
         this.address = address;
         this.profilePhotoUrl = profilePhotoUrl;
+        this.language = language;
     }
 
     public void update(com.backendsems.profiles.domain.model.commands.UpdateProfileCommand command) {
@@ -65,6 +69,10 @@ public class Profile extends AuditableAbstractAggregateRoot<Profile> {
         }
     }
 
+    public void updateLanguage(String language) {
+        this.language = language;
+    }
+
     public static Profile create(com.backendsems.profiles.domain.model.commands.CreateProfileCommand command) {
         return new Profile(
                 new com.backendsems.profiles.domain.model.valueobjects.PersonName(command.name()),
@@ -73,7 +81,9 @@ public class Profile extends AuditableAbstractAggregateRoot<Profile> {
                 command.password(),
                 new com.backendsems.profiles.domain.model.valueobjects.PhoneNumber(command.phone()),
                 new com.backendsems.profiles.domain.model.valueobjects.Address(command.address()),
-                null // profilePhotoUrl inicial
+                null, // profilePhotoUrl inicial
+                "en" // default language
+
         );
     }
 }

@@ -11,6 +11,7 @@ public record ProfileResource(
         String email,
         String phone,
         String address,
-        String profilePhotoUrl
+        String profilePhotoUrl,
+        String language
 ) {
 }

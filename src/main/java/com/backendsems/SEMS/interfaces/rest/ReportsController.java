@@ -6,8 +6,18 @@ import com.backendsems.SEMS.domain.model.valueobjects.UserId;
 import com.backendsems.SEMS.domain.services.DeviceQueryService;
 import com.backendsems.SEMS.interfaces.rest.resources.TopDeviceResource;
 import com.backendsems.SEMS.interfaces.rest.resources.WeeklyConsumptionResource;
+import com.backendsems.SEMS.interfaces.rest.resources.MonthlyConsumptionResource;
+import com.backendsems.SEMS.interfaces.rest.resources.CompareConsumptionResource;
 import com.backendsems.SEMS.interfaces.rest.transform.TopDeviceResourceFromEntityAssembler;
 import com.backendsems.SEMS.interfaces.rest.transform.WeeklyConsumptionResourceFromEntityAssembler;
+import com.backendsems.SEMS.interfaces.rest.transform.MonthlyConsumptionResourceFromEntityAssembler;
+import com.backendsems.SEMS.interfaces.rest.transform.CompareConsumptionResourceFromEntityAssembler;
+import com.backendsems.SEMS.domain.services.ReportService;
+import com.backendsems.SEMS.domain.model.queries.GetMonthlyConsumptionByUserQuery;
+import com.backendsems.SEMS.domain.model.queries.CompareConsumptionQuery;
+import org.springframework.http.HttpHeaders;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
 import com.backendsems.profiles.interfaces.acl.ProfilesContextFacade;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,19 +44,23 @@ public class ReportsController {
     private final DeviceQueryService deviceQueryService;
     private final TokenService tokenService;
     private final ProfilesContextFacade profilesContextFacade;
+    private final ReportService reportService;
 
     /**
      * Constructor
      * @param deviceQueryService Servicio de queries para dispositivos
      * @param tokenService Servicio de tokens
      * @param profilesContextFacade Fachada de perfiles
+     * @param reportService Servicio de reportes
      */
     public ReportsController(DeviceQueryService deviceQueryService, 
                            TokenService tokenService, 
-                           ProfilesContextFacade profilesContextFacade) {
+                           ProfilesContextFacade profilesContextFacade,
+                           ReportService reportService) {
         this.deviceQueryService = deviceQueryService;
         this.tokenService = tokenService;
         this.profilesContextFacade = profilesContextFacade;
+        this.reportService = reportService;
     }
 
     /**
@@ -95,7 +109,9 @@ public class ReportsController {
     @Operation(summary = "Get weekly consumption", description = "Get weekly consumption data for the current user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Weekly consumption data retrieved successfully")})
-    public ResponseEntity<WeeklyConsumptionResource> getWeeklyConsumption(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> getWeeklyConsumption(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) String format) {
         try {
             // Extraer token del header
             String token = authHeader.replace("Bearer ", "");
@@ -113,8 +129,84 @@ public class ReportsController {
             var weeklyConsumptionResource = WeeklyConsumptionResourceFromEntityAssembler
                     .toResourceFromDailySummary(dailySummaryData);
                     
+            if ("pdf".equalsIgnoreCase(format)) {
+                byte[] pdf = reportService.generateWeeklyConsumptionPdf(weeklyConsumptionResource);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDispositionFormData("attachment", "weekly_report.pdf");
+                return ResponseEntity.ok().headers(headers).body(pdf);
+            }
+                    
             return ResponseEntity.ok(weeklyConsumptionResource);
             
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/monthly-history")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get monthly history", description = "Get monthly consumption history for the current user")
+    public ResponseEntity<?> getMonthlyHistory(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) String format) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String email = tokenService.getEmailFromToken(token);
+            Long profileId = profilesContextFacade.fetchProfileIdByEmail(email);
+            if (profileId == null) return ResponseEntity.badRequest().build();
+            
+            var userId = new UserId(profileId);
+            var query = new GetMonthlyConsumptionByUserQuery(userId);
+            var data = deviceQueryService.handleMonthlySummary(query);
+            var resource = MonthlyConsumptionResourceFromEntityAssembler.toResourceFromDailySummary(data);
+            
+            if ("pdf".equalsIgnoreCase(format)) {
+                byte[] pdf = reportService.generateMonthlyConsumptionPdf(resource);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDispositionFormData("attachment", "monthly_report.pdf");
+                return ResponseEntity.ok().headers(headers).body(pdf);
+            }
+            return ResponseEntity.ok(resource);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/compare")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Compare consumption", description = "Compare consumption between two periods")
+    public ResponseEntity<?> compareConsumption(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period1Start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period1End,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period2Start,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period2End,
+            @RequestParam(required = false) String format) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String email = tokenService.getEmailFromToken(token);
+            Long profileId = profilesContextFacade.fetchProfileIdByEmail(email);
+            if (profileId == null) return ResponseEntity.badRequest().build();
+            
+            var userId = new UserId(profileId);
+            
+            var dataP1 = deviceQueryService.handleCustomSummary(userId, period1Start, period1End);
+            var dataP2 = deviceQueryService.handleCustomSummary(userId, period2Start, period2End);
+            
+            var resource = CompareConsumptionResourceFromEntityAssembler.toResource(
+                    dataP1, period1Start, period1End,
+                    dataP2, period2Start, period2End);
+                    
+            if ("pdf".equalsIgnoreCase(format)) {
+                byte[] pdf = reportService.generateComparisonPdf(resource);
+                HttpHeaders headers = new HttpHeaders();
+                headers.setContentType(MediaType.APPLICATION_PDF);
+                headers.setContentDispositionFormData("attachment", "comparison_report.pdf");
+                return ResponseEntity.ok().headers(headers).body(pdf);
+            }
+            return ResponseEntity.ok(resource);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }

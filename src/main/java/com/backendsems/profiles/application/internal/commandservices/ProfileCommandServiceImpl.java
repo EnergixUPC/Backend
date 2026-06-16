@@ -4,6 +4,7 @@ import com.backendsems.iam.interfaces.acl.IamContextFacade;
 import com.backendsems.profiles.domain.model.aggregates.Profile;
 import com.backendsems.profiles.domain.model.commands.CreateProfileCommand;
 import com.backendsems.profiles.domain.model.commands.UpdateProfileCommand;
+import com.backendsems.profiles.domain.model.commands.UpdateProfileLanguageCommand;
 import com.backendsems.profiles.domain.services.ProfileCommandService;
 import com.backendsems.profiles.infrastructure.repositories.jpa.repositories.ProfileRepository;
 import org.slf4j.Logger;
@@ -53,5 +54,11 @@ public class ProfileCommandServiceImpl implements ProfileCommandService {
                 logger.warn("Failed to sync email with users table for profile ID {}", command.profileId());
             }
         }
+    }
+    @Override
+    public void handle(UpdateProfileLanguageCommand command) {
+        Profile profile = profileRepository.findById(command.profileId()).orElseThrow(() -> new RuntimeException("Profile not found"));
+        profile.updateLanguage(command.language());
+        profileRepository.save(profile);
     }
 }
