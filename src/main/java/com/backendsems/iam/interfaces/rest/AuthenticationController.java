@@ -1,5 +1,6 @@
 package com.backendsems.iam.interfaces.rest;
 
+import com.backendsems.iam.application.internal.outboundservices.tokens.TokenService;
 import com.backendsems.iam.domain.services.UserCommandService;
 import com.backendsems.iam.interfaces.rest.resources.AuthenticatedUserResource;
 import com.backendsems.iam.interfaces.rest.resources.SignInResource;
@@ -26,16 +27,13 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Authentication", description = "Available Authentication Endpoints")
 public class AuthenticationController {
     private final UserCommandService userCommandService;
+    private final TokenService tokenService;
 
-    public AuthenticationController(UserCommandService userCommandService) {
+    public AuthenticationController(UserCommandService userCommandService, TokenService tokenService) {
         this.userCommandService = userCommandService;
+        this.tokenService = tokenService;
     }
 
-    /**
-     * Handles the sign-in request.
-     * @param signInResource the sign-in request body.
-     * @return the authenticated user resource.
-     */
     @PostMapping("/sign-in")
     @Operation(summary = "Sign-in", description = "Sign-in with the provided credentials.")
     @ApiResponses(value = {
@@ -51,11 +49,6 @@ public class AuthenticationController {
         return ResponseEntity.ok(authenticatedUserResource);
     }
 
-    /**
-     * Handles the sign-up request.
-     * @param signUpResource the sign-up request body.
-     * @return the created user resource.
-     */
     @PostMapping("/sign-up")
     @Operation(summary = "Sign-up", description = "Sign-up with the provided credentials.")
     @ApiResponses(value = {
@@ -71,7 +64,6 @@ public class AuthenticationController {
             var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(user.get());
             return new ResponseEntity<>(userResource, HttpStatus.CREATED);
         } catch (RuntimeException e) {
-            // Log the error for debugging
             System.err.println("Sign-up error: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().build();
@@ -80,5 +72,19 @@ public class AuthenticationController {
             e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PostMapping("/sign-out")
+    @Operation(summary = "Sign-out", description = "Sign-out securely by revoking the token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "User signed out successfully."),
+            @ApiResponse(responseCode = "400", description = "Invalid token.")})
+    public ResponseEntity<?> signOut(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            tokenService.revokeToken(token);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.badRequest().build();
     }
 }
