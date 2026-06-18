@@ -1,11 +1,16 @@
 package com.backendsems.iam.interfaces.rest;
 
 import com.backendsems.iam.domain.model.queries.GetUserByIdQuery;
+import com.backendsems.iam.domain.model.queries.GetUserByEmailQuery;
 import com.backendsems.iam.domain.model.commands.UpdateUserPlanCommand;
 import com.backendsems.iam.domain.services.UserQueryService;
 import com.backendsems.iam.domain.services.UserCommandService;
 import com.backendsems.iam.interfaces.rest.resources.UpdateUserPlanResource;
+import com.backendsems.iam.interfaces.rest.resources.ExistsResource;
+import com.backendsems.iam.interfaces.rest.resources.ChangePasswordResource;
 import com.backendsems.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
+import com.backendsems.iam.infrastructure.persistence.jpa.repositories.UserRepository;
+import com.backendsems.iam.application.internal.outboundservices.hashing.HashingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,10 +34,14 @@ public class UserController {
 
     private final UserQueryService userQueryService;
     private final UserCommandService userCommandService;
+    private final UserRepository userRepository;
+    private final HashingService hashingService;
 
-    public UserController(UserQueryService userQueryService, UserCommandService userCommandService) {
+    public UserController(UserQueryService userQueryService, UserCommandService userCommandService, UserRepository userRepository, HashingService hashingService) {
         this.userQueryService = userQueryService;
         this.userCommandService = userCommandService;
+        this.userRepository = userRepository;
+        this.hashingService = hashingService;
     }
 
     /**
@@ -103,5 +112,54 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @GetMapping("/email/{email}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get user by email", description = "Retrieve a user by their email.")
+    public ResponseEntity<?> getUserByEmail(@PathVariable String email) {
+        var query = new GetUserByEmailQuery(email);
+        var user = userQueryService.handle(query);
+        if (user.isPresent()) {
+            return ResponseEntity.ok(UserResourceFromEntityAssembler.toResourceFromEntity(user.get()));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/username/{username}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get user by username", description = "Retrieve a user by their username (email).")
+    public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
+        var query = new GetUserByEmailQuery(username);
+        var user = userQueryService.handle(query);
+        if (user.isPresent()) {
+            return ResponseEntity.ok(UserResourceFromEntityAssembler.toResourceFromEntity(user.get()));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/email/{email}/exists")
+    @Operation(summary = "Check if email exists", description = "Check if email is already registered.")
+    public ResponseEntity<?> existsByEmail(@PathVariable String email) {
+        var query = new GetUserByEmailQuery(email);
+        var user = userQueryService.handle(query);
+        return ResponseEntity.ok(new ExistsResource(user.isPresent()));
+    }
+
+    @PutMapping("/{id}/password")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Change password", description = "Change password for user by ID.")
+    public ResponseEntity<?> changePassword(@PathVariable Long id, @RequestBody ChangePasswordResource resource) {
+        var userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        var user = userOpt.get();
+        if (!hashingService.matches(resource.oldPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body("Incorrect old password");
+        }
+        user.updatePassword(hashingService.encode(resource.newPassword()));
+        userRepository.save(user);
+        return ResponseEntity.ok().build();
     }
 }

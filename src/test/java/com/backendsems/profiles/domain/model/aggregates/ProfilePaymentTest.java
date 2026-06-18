@@ -40,7 +40,8 @@ class ProfilePaymentTest {
                 "SecurePassword123!",
                 mockPhone,
                 mockAddress,
-                "https://example.com/profiles/juan-photo.jpg"
+                "https://example.com/profiles/juan-photo.jpg",
+                "en"
         );
     }
 
@@ -70,7 +71,8 @@ class ProfilePaymentTest {
                 "Password123!",
                 mockPhone,
                 mockAddress,
-                null
+                null,
+                "en"
         );
 
         // Assert
@@ -101,7 +103,8 @@ class ProfilePaymentTest {
                 profile.getPassword(),
                 profile.getPhone(),
                 profile.getAddress(),
-                profile.getProfilePhotoUrl()
+                profile.getProfilePhotoUrl(),
+                "en"
         );
 
         // Assert
@@ -120,7 +123,8 @@ class ProfilePaymentTest {
                 profile.getPassword(),
                 profile.getPhone(),
                 profile.getAddress(),
-                profile.getProfilePhotoUrl()
+                profile.getProfilePhotoUrl(),
+                "en"
         );
 
         // Assert
@@ -139,7 +143,8 @@ class ProfilePaymentTest {
                 profile.getPassword(),
                 newPhone,
                 profile.getAddress(),
-                profile.getProfilePhotoUrl()
+                profile.getProfilePhotoUrl(),
+                "en"
         );
 
         // Assert
@@ -158,7 +163,8 @@ class ProfilePaymentTest {
                 profile.getPassword(),
                 profile.getPhone(),
                 newAddress,
-                profile.getProfilePhotoUrl()
+                profile.getProfilePhotoUrl(),
+                "en"
         );
 
         // Assert
@@ -177,7 +183,8 @@ class ProfilePaymentTest {
                 profile.getPassword(),
                 profile.getPhone(),
                 profile.getAddress(),
-                newPhotoUrl
+                newPhotoUrl,
+                "en"
         );
 
         // Assert
@@ -234,7 +241,8 @@ class ProfilePaymentTest {
                 "NewPassword456!",
                 updatedPhone,
                 updatedAddress,
-                "https://example.com/carlos-photo.jpg"
+                "https://example.com/carlos-photo.jpg",
+                "en"
         );
 
         // Assert

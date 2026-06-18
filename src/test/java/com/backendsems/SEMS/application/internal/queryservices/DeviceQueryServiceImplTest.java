@@ -43,7 +43,8 @@ class DeviceQueryServiceImplTest {
         UserId userId = new UserId(1L);
         GetMonthlyConsumptionByUserQuery query = new GetMonthlyConsumptionByUserQuery(userId);
 
-        List<Object[]> mockResult = List.of(new Object[]{java.sql.Date.valueOf(LocalDate.now()), 15.5});
+        List<Object[]> mockResult = new java.util.ArrayList<>();
+        mockResult.add(new Object[]{java.sql.Date.valueOf(LocalDate.now()), 15.5});
 
         when(consumptionRepository.findDailyConsumptionSumByUserIdAndDateRange(
                 eq(userId), any(LocalDate.class), any(LocalDate.class)))
@@ -61,7 +62,8 @@ class DeviceQueryServiceImplTest {
         LocalDate start = LocalDate.now().minusDays(10);
         LocalDate end = LocalDate.now();
 
-        List<Object[]> mockResult = List.of(new Object[]{java.sql.Date.valueOf(LocalDate.now()), 20.0});
+        List<Object[]> mockResult = new java.util.ArrayList<>();
+        mockResult.add(new Object[]{java.sql.Date.valueOf(LocalDate.now()), 20.0});
 
         when(consumptionRepository.findDailyConsumptionSumByUserIdAndDateRange(
                 userId, start, end))

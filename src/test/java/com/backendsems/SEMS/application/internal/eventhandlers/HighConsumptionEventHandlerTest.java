@@ -36,7 +36,7 @@ class HighConsumptionEventHandlerTest {
         
         CreateNotificationCommand command = commandCaptor.getValue();
         assertEquals(100L, command.deviceId().value());
-        assertEquals(1L, command.userId().value());
+        assertEquals(1L, command.userId().id());
         assertEquals("High consumption detected: 6.5 kW/min", command.message());
         assertEquals("ALERT", command.type());
 

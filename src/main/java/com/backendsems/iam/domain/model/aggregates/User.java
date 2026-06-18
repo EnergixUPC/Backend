@@ -100,4 +100,12 @@ public class User extends AuditableAbstractAggregateRoot<User> {
     public void updatePlan(String plan) {
         this.plan = plan;
     }
+
+    /**
+     * Actualiza la contraseña del usuario.
+     * @param password La nueva contraseña.
+     */
+    public void updatePassword(String password) {
+        this.password = password;
+    }
 }

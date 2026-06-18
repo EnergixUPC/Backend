@@ -85,6 +85,13 @@ public class TokenServiceImpl implements TokenService, BearerTokenService {
                 return bearerToken;
             }
         }
+        
+        // Fallback for WebSocket connections that cannot send headers
+        String tokenParam = request.getParameter("token");
+        if (tokenParam != null && !tokenParam.isEmpty()) {
+            return tokenParam;
+        }
+        
         return null;
     }
 

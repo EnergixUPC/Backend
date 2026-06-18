@@ -2,6 +2,7 @@ package com.backendsems.SEMS.interfaces.rest;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import com.backendsems.SEMS.domain.model.aggregates.Device;
 import com.backendsems.SEMS.domain.model.commands.DeleteDeviceCommand;
 import com.backendsems.SEMS.domain.model.commands.UpdateDeviceCommand;
 import com.backendsems.SEMS.domain.model.queries.*;
@@ -101,7 +102,7 @@ public class DevicesController {
     }
 
     /**
-     * Obtener todos los dispositivos
+     * Obtener todos los dispositivos, con filtrado opcional por status.
      * @return Lista de recursos de dispositivos
      */
     @GetMapping
@@ -112,7 +113,8 @@ public class DevicesController {
         }
     )
     public ResponseEntity<List<DeviceResource>> getAllDevices(
-        @RequestHeader("Authorization") String authHeader
+        @RequestHeader("Authorization") String authHeader,
+        @RequestParam(required = false) String status
     ) {
         // Extraer token del header
         String token = authHeader.replace("Bearer ", "");
@@ -124,11 +126,88 @@ public class DevicesController {
         );
 
         var devices = deviceQueryService.handle(new GetAllDevicesQuery(userId));
-        var deviceResources = devices
-            .stream()
+        var stream = devices.stream();
+        if (status != null && !status.isBlank()) {
+            stream = stream.filter(d -> status.equalsIgnoreCase(d.getStatus().status()));
+        }
+        var deviceResources = stream
             .map(DeviceFromEntityAssembler::toResource)
             .collect(Collectors.toList());
         return ResponseEntity.ok(deviceResources);
+    }
+
+    /**
+     * Obtener todos los dispositivos activos del usuario.
+     * @return Lista de recursos de dispositivos activos
+     */
+    @GetMapping("/active")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get active devices", description = "Get active devices for current user")
+    public ResponseEntity<List<DeviceResource>> getActiveDevices(
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = tokenService.getEmailFromToken(token);
+        Long profileId = profilesContextFacade.fetchProfileIdByEmail(email);
+        if (profileId == null) return ResponseEntity.badRequest().build();
+        var userId = new com.backendsems.SEMS.domain.model.valueobjects.UserId(
+            profileId
+        );
+
+        var devices = deviceQueryService.handle(new GetAllDevicesQuery(userId));
+        var deviceResources = devices.stream()
+            .filter(Device::isActivo)
+            .map(DeviceFromEntityAssembler::toResource)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(deviceResources);
+    }
+
+    /**
+     * Obtener dispositivos de un usuario por categoría.
+     * @return Lista de recursos de dispositivos filtrados por categoría
+     */
+    @GetMapping("/category/{category}")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get devices by category", description = "Get devices for current user filtered by category")
+    public ResponseEntity<List<DeviceResource>> getDevicesByCategory(
+        @PathVariable String category,
+        @RequestHeader("Authorization") String authHeader
+    ) {
+        String token = authHeader.replace("Bearer ", "");
+        String email = tokenService.getEmailFromToken(token);
+        Long profileId = profilesContextFacade.fetchProfileIdByEmail(email);
+        if (profileId == null) return ResponseEntity.badRequest().build();
+        var userId = new com.backendsems.SEMS.domain.model.valueobjects.UserId(
+            profileId
+        );
+
+        var devices = deviceQueryService.handle(new GetAllDevicesQuery(userId));
+        var deviceResources = devices.stream()
+            .filter(d -> category.equalsIgnoreCase(d.getCategory().category()))
+            .map(DeviceFromEntityAssembler::toResource)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(deviceResources);
+    }
+
+    /**
+     * Alterna (toggle) el estado encendido/apagado (on/off) de un dispositivo.
+     */
+    @PostMapping("/{deviceId}/toggle")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Toggle device status", description = "Toggle device status between on and off")
+    public ResponseEntity<DeviceResource> toggleDevice(
+        @PathVariable Long deviceId
+    ) {
+        var device = deviceQueryService.handle(new GetDeviceByIdQuery(deviceId));
+        if (device == null) return ResponseEntity.notFound().build();
+        
+        String currentStatus = device.getStatus() != null ? device.getStatus().status() : "off";
+        String newStatus = "on".equalsIgnoreCase(currentStatus) ? "off" : "on";
+        
+        var command = new UpdateDeviceCommand(deviceId, newStatus, null, null, null, null);
+        var updatedDevice = deviceCommandService.handle(command);
+        var deviceResource = DeviceFromEntityAssembler.toResource(updatedDevice);
+        return ResponseEntity.ok(deviceResource);
     }
 
     /**
