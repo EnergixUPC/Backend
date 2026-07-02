@@ -37,9 +37,10 @@ public class HighConsumptionDetectedEventHandler {
         if (device == null) return;
 
         String deviceName = device.getName().name();
+        double threshold = event.getThresholdUsed() != null ? event.getThresholdUsed() : 5.0;
         String message = String.format(
-            "El dispositivo '%s' ha superado el límite de consumo con %.2f kW/min (umbral: 5 kW/min).",
-            deviceName, event.getConsumption()
+            "El dispositivo '%s' ha superado el límite de consumo con %.2f kW/min (umbral: %.2f kW/min).",
+            deviceName, event.getConsumption(), threshold
         );
 
         notificationCommandService.createNotification(new CreateNotificationCommand(

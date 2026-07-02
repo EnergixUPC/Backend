@@ -5,6 +5,8 @@ package com.backendsems.SEMS.interfaces.rest.resources;
  * Recurso REST para actualizar preferencias globales del usuario.
  */
 public record UpdatePreferencesResource(
+        // US21: tarifa referencial S/. por kWh (opcional; null = no se modifica / se usa el valor por defecto)
+        Double pricePerKwh,
         // Monitoring Settings
         boolean habilitarMonitoreoEnergia,
         boolean recibirAlertasAltoConsumo,

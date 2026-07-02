@@ -21,6 +21,7 @@ public class PreferencesFromEntityAssembler {
                 null, // deviceId removido ya que las preferencias son globales por usuario
                 entity.getThreshold(),
                 entity.isNotificationEnabled(),
+                entity.getPricePerKwh(),
                 entity.isHabilitarMonitoreoEnergia(),
                 entity.isRecibirAlertasAltoConsumo(),
                 entity.isMonitorearCalefaccionRefrigeracion(),

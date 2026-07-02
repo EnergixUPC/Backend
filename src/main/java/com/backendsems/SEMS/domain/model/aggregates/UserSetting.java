@@ -42,6 +42,20 @@ public class UserSetting extends AuditableModel {
     @Column(name = "notification_schedule_end")
     private LocalTime notificationScheduleEnd;
 
+    // US23: horario de "hora punta" configurado por el usuario, distinto de la ventana de
+    // silencio de notificaciones de arriba. Se usa para distinguir alertas de alto consumo
+    // que ocurren en horario de mayor demanda eléctrica.
+    @Column(name = "peak_hour_start")
+    private LocalTime peakHourStart;
+
+    @Column(name = "peak_hour_end")
+    private LocalTime peakHourEnd;
+
+    // US23: umbral de consumo instantáneo (kWh) propio del usuario para disparar alertas.
+    // Nullable: si no se configura, se usa el umbral global por defecto del sistema.
+    @Column(name = "high_consumption_threshold_kwh")
+    private Double highConsumptionThresholdKwh;
+
     // Personalized Reports
     @Column(nullable = false)
     private boolean reportDaily;
@@ -79,6 +93,9 @@ public class UserSetting extends AuditableModel {
         this.dailyWeeklySummary = true;
         this.notificationScheduleStart = LocalTime.of(5, 0); // 05:00 AM
         this.notificationScheduleEnd = LocalTime.of(22, 0); // 22:00 PM
+        this.peakHourStart = LocalTime.of(18, 0); // Horario punta habitual en Perú: 18:00-23:00
+        this.peakHourEnd = LocalTime.of(23, 0);
+        this.highConsumptionThresholdKwh = null; // null = usa el umbral global por defecto
         this.reportDaily = true;
         this.reportWeekly = false;
         this.reportMonthly = false;
@@ -94,6 +111,22 @@ public class UserSetting extends AuditableModel {
         this.dailyWeeklySummary = summary;
         this.notificationScheduleStart = start;
         this.notificationScheduleEnd = end;
+    }
+
+    public void updatePeakHourSettings(LocalTime start, LocalTime end, Double highConsumptionThresholdKwh) {
+        this.peakHourStart = start;
+        this.peakHourEnd = end;
+        this.highConsumptionThresholdKwh = highConsumptionThresholdKwh;
+    }
+
+    /** US23: true si la hora dada cae dentro de la ventana de hora punta configurada (soporta ventanas que cruzan medianoche). */
+    public boolean isWithinPeakHour(LocalTime time) {
+        if (peakHourStart == null || peakHourEnd == null || time == null) return false;
+        if (peakHourStart.isBefore(peakHourEnd)) {
+            return !time.isBefore(peakHourStart) && time.isBefore(peakHourEnd);
+        }
+        // Ventana que cruza medianoche, p.ej. 22:00-02:00
+        return !time.isBefore(peakHourStart) || time.isBefore(peakHourEnd);
     }
 
     public void updateReportSettings(boolean daily, boolean weekly, boolean monthly, boolean pdf, boolean csv) {

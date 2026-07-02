@@ -18,6 +18,7 @@ public class UpdatePreferencesFromResourceAssembler {
     public static UpdatePreferencesCommand toCommand(UpdatePreferencesResource resource, Long userId) {
         return new UpdatePreferencesCommand(
                 userId,
+                resource.pricePerKwh(),
                 resource.habilitarMonitoreoEnergia(),
                 resource.recibirAlertasAltoConsumo(),
                 resource.monitorearCalefaccionRefrigeracion(),

@@ -56,6 +56,7 @@ public class PreferencesController {
                     null,  // deviceId (null para preferencias globales)
                     100.0, // threshold por defecto
                     true,  // notificationEnabled por defecto
+                    null,  // pricePerKwh: null = usa el valor por defecto del sistema (ver DashboardQueryServiceImpl)
                     true,  // habilitarMonitoreoEnergia
                     true,  // recibirAlertasAltoConsumo
                     true,  // monitorearCalefaccionRefrigeracion

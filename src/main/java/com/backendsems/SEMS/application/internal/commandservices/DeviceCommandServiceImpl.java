@@ -103,6 +103,11 @@ public class DeviceCommandServiceImpl implements DeviceCommandService {
             preferences.updateAlertasDispositivosDesconectados(command.alertasDispositivosDesconectados());
         }
 
+        // US21: solo se actualiza si el cliente envía un valor explícito.
+        if (command.pricePerKwh() != null) {
+            preferences.updatePricePerKwh(command.pricePerKwh());
+        }
+
         preferencesRepository.save(preferences);
     }
 

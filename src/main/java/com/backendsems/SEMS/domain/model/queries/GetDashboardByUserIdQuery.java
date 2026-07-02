@@ -16,6 +16,7 @@ public record GetDashboardByUserIdQuery(UserId userId) {
             double estimatedSavingsPercent,
             int activeDevices,
             double estimatedBill,
+            double pricePerKwh,
             double todaysConsumptionKwh,
             List<DailyItem> dailyConsumption,
             Map<String, Double> categoryConsumption,

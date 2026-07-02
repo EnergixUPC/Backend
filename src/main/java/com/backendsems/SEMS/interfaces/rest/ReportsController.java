@@ -1,7 +1,14 @@
 package com.backendsems.SEMS.interfaces.rest;
 
+import com.backendsems.SEMS.domain.model.aggregates.Device;
+import com.backendsems.SEMS.domain.model.aggregates.UserSetting;
 import com.backendsems.SEMS.domain.model.entities.Report;
+import com.backendsems.SEMS.domain.model.entities.Consumption;
+import com.backendsems.SEMS.domain.model.entities.DeviceConsumption;
+import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.ConsumptionRepository;
 import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.ReportRepository;
+import com.backendsems.SEMS.infrastructure.persistence.jpa.repositories.SettingsRepository;
+import com.backendsems.SEMS.domain.model.queries.GetDevicesByUserIdQuery;
 import com.backendsems.SEMS.domain.model.queries.GetTopDevicesByUserQuery;
 import com.backendsems.SEMS.domain.model.queries.GetWeeklyConsumptionByUserQuery;
 import com.backendsems.SEMS.domain.model.valueobjects.UserId;
@@ -53,20 +60,26 @@ public class ReportsController {
     private final ProfilesContextFacade profilesContextFacade;
     private final ReportService reportService;
     private final ReportRepository reportRepository;
+    private final ConsumptionRepository consumptionRepository;
+    private final SettingsRepository settingsRepository;
 
     /**
      * Constructor
      */
-    public ReportsController(DeviceQueryService deviceQueryService, 
-                           TokenService tokenService, 
+    public ReportsController(DeviceQueryService deviceQueryService,
+                           TokenService tokenService,
                            ProfilesContextFacade profilesContextFacade,
                            ReportService reportService,
-                           ReportRepository reportRepository) {
+                           ReportRepository reportRepository,
+                           ConsumptionRepository consumptionRepository,
+                           SettingsRepository settingsRepository) {
         this.deviceQueryService = deviceQueryService;
         this.tokenService = tokenService;
         this.profilesContextFacade = profilesContextFacade;
         this.reportService = reportService;
         this.reportRepository = reportRepository;
+        this.consumptionRepository = consumptionRepository;
+        this.settingsRepository = settingsRepository;
     }
 
     /**
@@ -103,6 +116,64 @@ public class ReportsController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    /**
+     * US23: Resumen de consumo en hora pico de un día concreto (por defecto, hoy).
+     * @param authHeader Header de autorización
+     * @param date Fecha a consultar (yyyy-MM-dd), por defecto hoy
+     * @return Porcentaje del consumo del día que ocurrió dentro de la ventana de hora punta configurada
+     */
+    @GetMapping("/peak-hour-summary")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Get peak-hour consumption summary", description = "US23: percentage of a day's consumption that occurred during the user's configured peak-hour window")
+    public ResponseEntity<?> getPeakHourSummary(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        Long userId = getUserIdFromHeader(authHeader);
+        if (userId == null) return ResponseEntity.badRequest().build();
+
+        LocalDate targetDate = date != null ? date : LocalDate.now();
+        var settingsOpt = settingsRepository.findByUserId(new UserId(userId));
+
+        if (settingsOpt.isEmpty() || settingsOpt.get().getPeakHourStart() == null || settingsOpt.get().getPeakHourEnd() == null) {
+            return ResponseEntity.ok(Map.of(
+                    "date", targetDate.toString(),
+                    "peakHourConfigured", false,
+                    "message", "Aún no configuraste tu horario de hora punta."
+            ));
+        }
+
+        UserSetting settings = settingsOpt.get();
+        var devices = deviceQueryService.handle(new GetDevicesByUserIdQuery(new UserId(userId)));
+        List<String> deviceIds = devices.stream().map(d -> String.valueOf(d.getId())).collect(Collectors.toList());
+
+        double totalConsumption = 0.0;
+        double peakConsumption = 0.0;
+
+        if (!deviceIds.isEmpty()) {
+            List<Consumption> dayConsumptions = consumptionRepository.findByDeviceIdInAndCalculatedAtBetween(
+                    deviceIds, targetDate.atStartOfDay(), targetDate.plusDays(1).atStartOfDay());
+
+            for (Consumption c : dayConsumptions) {
+                totalConsumption += c.getConsumption();
+                if (settings.isWithinPeakHour(c.getCalculatedAt().toLocalTime())) {
+                    peakConsumption += c.getConsumption();
+                }
+            }
+        }
+
+        double peakPercentage = totalConsumption > 0 ? (peakConsumption / totalConsumption) * 100.0 : 0.0;
+
+        return ResponseEntity.ok(Map.of(
+                "date", targetDate.toString(),
+                "peakHourConfigured", true,
+                "peakHourStart", settings.getPeakHourStart().toString(),
+                "peakHourEnd", settings.getPeakHourEnd().toString(),
+                "totalConsumption", totalConsumption,
+                "peakConsumption", peakConsumption,
+                "peakPercentage", peakPercentage
+        ));
     }
 
     /**
@@ -233,27 +304,55 @@ public class ReportsController {
             "version", "1.0.0"
         );
 
-        // Build mock/dynamic summary data matching ReportSummaryResponse
-        var summary = Map.of(
-            "totalDevices", 3,
-            "activeDevices", 2,
-            "totalConsumptionPeriod", 450.5,
-            "averageConsumptionPerDevice", 150.2,
-            "mostEfficientDevice", "Smart TV",
-            "leastEfficientDevice", "Aire Acondicionado",
-            "recommendations", List.of(
-                "Apaga el Aire Acondicionado cuando no estés en casa.",
-                "Usa bombillas LED de bajo consumo.",
-                "Desconecta los electrodomésticos en modo espera."
-            )
-        );
+        // US22: resumen y recomendaciones calculados a partir del consumo real del usuario
+        // (dispositivos y su ranking de consumo), en vez de valores fijos en código.
+        var userId = new UserId(report.getUserId());
+        var allDevices = deviceQueryService.handle(new GetDevicesByUserIdQuery(userId));
+        var topDevices = deviceQueryService.handle(new GetTopDevicesByUserQuery(userId, 10, "monthly"));
+
+        int totalDevices = allDevices.size();
+        long activeDevices = allDevices.stream().filter(Device::isActivo).count();
+
+        double totalConsumptionPeriod = topDevices.stream().mapToDouble(DeviceConsumption::getConsumo).sum();
+        double averageConsumptionPerDevice = topDevices.isEmpty() ? 0.0 : totalConsumptionPeriod / topDevices.size();
+        double peakConsumption = topDevices.stream().mapToDouble(DeviceConsumption::getConsumo).max().orElse(0.0);
+
+        // Dispositivos ordenados por GetTopDevicesByUserQuery en orden descendente de consumo:
+        // el primero es el de mayor consumo (menos eficiente) y el último el de menor (más eficiente).
+        String mostEfficientDevice = topDevices.isEmpty() ? null
+                : topDevices.get(topDevices.size() - 1).getDevice().getName().name();
+        String leastEfficientDevice = topDevices.isEmpty() ? null
+                : topDevices.get(0).getDevice().getName().name();
+
+        // Heurística simple: la eficiencia baja cuanto más concentrado está el consumo en un solo dispositivo.
+        double efficiencyScore = (topDevices.isEmpty() || totalConsumptionPeriod <= 0) ? 0.0
+                : Math.max(0.0, 100.0 - (peakConsumption / totalConsumptionPeriod) * 100.0);
+
+        List<String> recommendations = leastEfficientDevice != null
+                ? List.of(
+                    String.format("%s es tu dispositivo de mayor consumo este periodo; revisa cuánto tiempo permanece encendido.", leastEfficientDevice),
+                    "Usa bombillas LED de bajo consumo.",
+                    "Desconecta los electrodomésticos en modo espera.")
+                : List.of(
+                    "Aún no hay suficientes datos de consumo para generar recomendaciones personalizadas.",
+                    "Usa bombillas LED de bajo consumo.",
+                    "Desconecta los electrodomésticos en modo espera.");
+
+        var summary = new HashMap<String, Object>();
+        summary.put("totalDevices", totalDevices);
+        summary.put("activeDevices", activeDevices);
+        summary.put("totalConsumptionPeriod", totalConsumptionPeriod);
+        summary.put("averageConsumptionPerDevice", averageConsumptionPerDevice);
+        summary.put("mostEfficientDevice", mostEfficientDevice);
+        summary.put("leastEfficientDevice", leastEfficientDevice);
+        summary.put("recommendations", recommendations);
 
         // Populate report data response
         var data = Map.of(
-            "totalConsumption", 450.5,
-            "averageConsumption", 15.0,
-            "peakConsumption", 25.0,
-            "efficiencyScore", 85.0,
+            "totalConsumption", totalConsumptionPeriod,
+            "averageConsumption", averageConsumptionPerDevice,
+            "peakConsumption", peakConsumption,
+            "efficiencyScore", efficiencyScore,
             "summary", summary
         );
 

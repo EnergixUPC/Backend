@@ -10,6 +10,7 @@ public record PreferencesResource(
         Long deviceId,
         Double threshold,
         boolean notificationEnabled,
+        Double pricePerKwh,
         // Monitoring Settings
         boolean habilitarMonitoreoEnergia,
         boolean recibirAlertasAltoConsumo,

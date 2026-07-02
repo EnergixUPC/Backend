@@ -100,6 +100,11 @@ public class SettingsController {
                 resource.notificationScheduleStart(),
                 resource.notificationScheduleEnd()
         );
+        settings.updatePeakHourSettings(
+                resource.peakHourStart(),
+                resource.peakHourEnd(),
+                resource.highConsumptionThresholdKwh()
+        );
         settings.updateReportSettings(
                 resource.reportDaily(),
                 resource.reportWeekly(),
@@ -191,6 +196,7 @@ public class SettingsController {
         if (settingsOpt.isPresent()) {
             UserSetting settings = settingsOpt.get();
             settings.updateNotificationSettings(true, true, true, LocalTime.of(5, 0), LocalTime.of(22, 0));
+            settings.updatePeakHourSettings(LocalTime.of(18, 0), LocalTime.of(23, 0), null);
             settings.updateReportSettings(true, false, false, true, false);
             settings.updateSecuritySettings(false);
             settingsRepository.save(settings);

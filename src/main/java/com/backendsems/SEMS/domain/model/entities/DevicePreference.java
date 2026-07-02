@@ -24,6 +24,11 @@ public class DevicePreference extends AuditableModel {
     @Column(nullable = false)
     private boolean notificationEnabled;
 
+    // US21: tarifa referencial (S/. por kWh) usada para estimar la factura y validarla contra el recibo real.
+    // Nullable: si no se configura, se usa el valor por defecto del sistema (ver DashboardQueryServiceImpl).
+    @Column(name = "price_per_kwh")
+    private Double pricePerKwh;
+
     // Monitoring Settings
     @Column(nullable = false)
     private boolean habilitarMonitoreoEnergia;
@@ -100,6 +105,10 @@ public class DevicePreference extends AuditableModel {
 
     public void updateNotificationEnabled(boolean notificationEnabled) {
         this.notificationEnabled = notificationEnabled;
+    }
+
+    public void updatePricePerKwh(Double pricePerKwh) {
+        this.pricePerKwh = pricePerKwh;
     }
 
     // Update methods for preferences

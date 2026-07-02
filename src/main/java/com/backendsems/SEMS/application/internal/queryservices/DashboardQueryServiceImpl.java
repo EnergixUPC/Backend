@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
 @Service
 public class DashboardQueryServiceImpl implements DashboardQueryService {
 
+    // US21: tarifa referencial por defecto (S/. por kWh, Perú) cuando el usuario no configuró la suya.
+    static final double DEFAULT_PRICE_PER_KWH = 0.50;
+
     private final DeviceQueryService deviceQueryService;
     private final DashboardRepository dashboardRepository;
     private final DeviceConsumptionRepository deviceConsumptionRepository;
@@ -70,7 +73,7 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
 
         // 6. Configurar precio por kWh y meta mensual (valores por defecto o de preferencias)
         var preferences = deviceQueryService.handle(new GetAllPreferencesByUserIdQuery(userId.id()));
-        double pricePerKwh = 0.50; // Precio por defecto en soles por kWh (Perú)
+        double pricePerKwh = DEFAULT_PRICE_PER_KWH; // US21: precio referencial por defecto en soles por kWh (Perú)
         double monthlySavingGoalKwh = 300.0; // Meta de ahorro por defecto: 300 kWh mensuales
 
         // Intentar obtener threshold promedio como referencia de meta
@@ -81,6 +84,17 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
                     .orElse(300.0);
             if (avgThreshold > 0) {
                 monthlySavingGoalKwh = avgThreshold;
+            }
+
+            // US21: si el usuario configuró una tarifa propia, se usa en vez del valor por defecto.
+            double avgPricePerKwh = preferences.stream()
+                    .map(DevicePreference::getPricePerKwh)
+                    .filter(Objects::nonNull)
+                    .mapToDouble(Double::doubleValue)
+                    .average()
+                    .orElse(DEFAULT_PRICE_PER_KWH);
+            if (avgPricePerKwh > 0) {
+                pricePerKwh = avgPricePerKwh;
             }
         }
 
@@ -196,6 +210,7 @@ public class DashboardQueryServiceImpl implements DashboardQueryService {
                 estimatedSavingsPercent,
                 activeDevices,
                 estimatedBill,
+                pricePerKwh,
                 todaysConsumptionKwh,
                 daily,
                 categoryConsumption,
