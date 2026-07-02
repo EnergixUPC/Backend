@@ -104,7 +104,7 @@ public class DevicesControllerTest {
                 .thenReturn(Collections.singletonList(device));
 
         // 3. Pass the authHeader to the controller method
-        ResponseEntity<List<DeviceResource>> response = devicesController.getAllDevices(authHeader);
+        ResponseEntity<List<DeviceResource>> response = devicesController.getAllDevices(authHeader, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
