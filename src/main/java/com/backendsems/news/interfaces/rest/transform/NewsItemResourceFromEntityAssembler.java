@@ -5,6 +5,16 @@ import com.backendsems.news.interfaces.rest.resources.NewsItemResource;
 
 public class NewsItemResourceFromEntityAssembler {
     public static NewsItemResource toResourceFromEntity(NewsItem entity) {
-        return new NewsItemResource(entity.getId(), entity.getTitle(), entity.getContent(), entity.isTip());
+        return new NewsItemResource(
+                entity.getId(),
+                entity.getTitle(),
+                entity.getContent(),
+                entity.isTip(),
+                entity.getSummary(),
+                entity.getImageUrl(),
+                entity.getCategory(),
+                entity.getLink(),
+                entity.getCreatedAt()
+        );
     }
 }

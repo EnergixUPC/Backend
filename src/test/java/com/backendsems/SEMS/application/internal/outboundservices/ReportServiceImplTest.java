@@ -60,7 +60,7 @@ class ReportServiceImplTest {
                 LocalDate.now().minusDays(7), LocalDate.now(), 40.0, List.of()
         );
 
-        var data = new CompareConsumptionResource(period1, period2, 10.0, 25.0);
+        var data = new CompareConsumptionResource(period1, period2, 10.0, 25.0, List.of("Usa bombillas LED de bajo consumo."), "control");
 
         byte[] pdfBytes = reportService.generateComparisonPdf(data);
 

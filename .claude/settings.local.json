@@ -1,7 +1,19 @@
 {
   "permissions": {
     "allow": [
-      "Bash(Test-Path C:\\\\Users\\\\nanak\\\\Dev\\\\experimentos\\\\Backend\\\\src\\\\test\\\\resources *)"
+      "Bash(Test-Path C:\\\\Users\\\\nanak\\\\Dev\\\\experimentos\\\\Backend\\\\src\\\\test\\\\resources *)",
+      "Skill(run)",
+      "PowerShell(Get-Process *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\n\" http://localhost:8080/swagger-ui.html --max-time 5)",
+      "Bash(curl -s http://localhost:8080/actuator/health --max-time 5)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\n\" -L http://localhost:8080/swagger-ui.html --max-time 5)",
+      "Bash(curl -s -o /dev/null -w \"HTTP Status: %{http_code}\\\\n\" http://localhost:8080/v3/api-docs --max-time 5)",
+      "Bash(curl -s -X POST http://localhost:8080/api/v1/authentication/sign-up -H 'Content-Type: application/json' -d '{\"email\":\"qa.debug.__CMDSUB_OUTPUT__@energix-test.dev\",\"password\":\"Testing123!\",\"name\":\"Debug\",\"lastName\":\"QA\",\"phone\":\"+51987654321\",\"address\":\"Av. Test 123\"}')",
+      "Bash(curl -s -X POST http://localhost:8080/api/v1/authentication/sign-in -H 'Content-Type: application/json' -d '{\"email\":\"qa.debug.__CMDSUB_OUTPUT__@energix-test.dev\",\"password\":\"Testing123!\"}')",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' -X PUT http://localhost:8080/api/v1/settings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJxYS5kZWJ1Zy4xNzgzMDM0NTQ4QGVuZXJnaXgtdGVzdC5kZXYiLCJpYXQiOjE3ODMwMzQ1NDgsImV4cCI6MTc4MzEyMDk0OH0.OeSqrC2DKibOnukkunPgarnKiRov1K-0Qf8f2ot_s6Y' -H 'Content-Type: application/json' -d '{\"notificationsEnabled\":true,\"highConsumptionAlerts\":true,\"dailyWeeklySummary\":true,\"notificationScheduleStart\":\"05:00\",\"notificationScheduleEnd\":\"22:00\",\"peakHourStart\":\"18:00\",\"peakHourEnd\":\"23:00\",\"highConsumptionThresholdKwh\":5,\"reportDaily\":false,\"reportWeekly\":true,\"reportMonthly\":true,\"reportFormatPdf\":true,\"reportFormatCsv\":false,\"twoFactorEnabled\":false}')",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}\\\\n' http://localhost:8080/api/v1/settings -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJxYS5kZWJ1Zy4xNzgzMDM0NTQ4QGVuZXJnaXgtdGVzdC5kZXYiLCJpYXQiOjE3ODMwMzQ1NDgsImV4cCI6MTc4MzEyMDk0OH0.OeSqrC2DKibOnukkunPgarnKiRov1K-0Qf8f2ot_s6Y')",
+      "Bash(git log *)",
+      "Bash(xargs -I{} grep -l \"class User\\\\b\\\\|@Entity\" {})"
     ]
   }
 }

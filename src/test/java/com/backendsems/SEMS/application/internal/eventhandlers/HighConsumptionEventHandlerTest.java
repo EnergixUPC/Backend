@@ -58,8 +58,9 @@ class HighConsumptionEventHandlerTest {
         assertEquals("High consumption detected: 6.5 kW/min", command.message());
         assertEquals("ALERT", command.type());
 
-        verify(messagingTemplate).convertAndSend("/topic/alerts", command);
-        verify(messagingTemplate).convertAndSend("/topic/alerts/100", command);
+        // US23 fix: la alerta ahora se envía solo al usuario dueño del dispositivo, no a un
+        // canal global compartido por todos los clientes conectados.
+        verify(messagingTemplate).convertAndSendToUser("42", "/queue/alerts", command);
     }
 
     @Test

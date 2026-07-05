@@ -10,7 +10,8 @@ public class CompareConsumptionResourceFromEntityAssembler {
 
     public static CompareConsumptionResource toResource(
             List<Object[]> dataPeriod1, LocalDate p1Start, LocalDate p1End,
-            List<Object[]> dataPeriod2, LocalDate p2Start, LocalDate p2End) {
+            List<Object[]> dataPeriod2, LocalDate p2Start, LocalDate p2End,
+            List<String> recommendations, String experimentVariant) {
 
         CompareConsumptionResource.PeriodConsumptionData pd1 = buildPeriodData(dataPeriod1, p1Start, p1End);
         CompareConsumptionResource.PeriodConsumptionData pd2 = buildPeriodData(dataPeriod2, p2Start, p2End);
@@ -21,7 +22,7 @@ public class CompareConsumptionResourceFromEntityAssembler {
             pctDiff = (diff / pd2.totalConsumption()) * 100.0;
         }
 
-        return new CompareConsumptionResource(pd1, pd2, diff, pctDiff);
+        return new CompareConsumptionResource(pd1, pd2, diff, pctDiff, recommendations, experimentVariant);
     }
 
     private static CompareConsumptionResource.PeriodConsumptionData buildPeriodData(

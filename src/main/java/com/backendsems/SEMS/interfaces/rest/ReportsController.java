@@ -22,8 +22,11 @@ import com.backendsems.SEMS.interfaces.rest.transform.WeeklyConsumptionResourceF
 import com.backendsems.SEMS.interfaces.rest.transform.MonthlyConsumptionResourceFromEntityAssembler;
 import com.backendsems.SEMS.interfaces.rest.transform.CompareConsumptionResourceFromEntityAssembler;
 import com.backendsems.SEMS.domain.services.ReportService;
+import com.backendsems.SEMS.domain.services.RecommendationQueryService;
 import com.backendsems.SEMS.domain.model.queries.GetMonthlyConsumptionByUserQuery;
 import com.backendsems.SEMS.domain.model.queries.CompareConsumptionQuery;
+import com.backendsems.experiments.domain.model.commands.AssignVariantCommand;
+import com.backendsems.experiments.domain.services.ExperimentCommandService;
 import org.springframework.http.HttpHeaders;
 import java.time.LocalDate;
 import java.util.Map;
@@ -62,6 +65,10 @@ public class ReportsController {
     private final ReportRepository reportRepository;
     private final ConsumptionRepository consumptionRepository;
     private final SettingsRepository settingsRepository;
+    private final RecommendationQueryService recommendationQueryService;
+    private final ExperimentCommandService experimentCommandService;
+
+    private static final String RECOMMENDATIONS_EXPERIMENT_KEY = "personalized-recommendations";
 
     /**
      * Constructor
@@ -72,7 +79,9 @@ public class ReportsController {
                            ReportService reportService,
                            ReportRepository reportRepository,
                            ConsumptionRepository consumptionRepository,
-                           SettingsRepository settingsRepository) {
+                           SettingsRepository settingsRepository,
+                           RecommendationQueryService recommendationQueryService,
+                           ExperimentCommandService experimentCommandService) {
         this.deviceQueryService = deviceQueryService;
         this.tokenService = tokenService;
         this.profilesContextFacade = profilesContextFacade;
@@ -80,6 +89,21 @@ public class ReportsController {
         this.reportRepository = reportRepository;
         this.consumptionRepository = consumptionRepository;
         this.settingsRepository = settingsRepository;
+        this.recommendationQueryService = recommendationQueryService;
+        this.experimentCommandService = experimentCommandService;
+    }
+
+    /**
+     * Q3: resuelve (asignando si hace falta) la variante de control/tratamiento del usuario para
+     * el experimento de recomendaciones personalizadas, y genera las recomendaciones correspondientes.
+     */
+    private Map<String, Object> resolveRecommendations(UserId userId) {
+        String variant = experimentCommandService.handle(
+                new AssignVariantCommand(RECOMMENDATIONS_EXPERIMENT_KEY, userId.id().toString()));
+        List<String> recommendations = "treatment".equals(variant)
+                ? recommendationQueryService.generatePersonalizedRecommendations(userId)
+                : recommendationQueryService.generateLegacyRecommendations(userId);
+        return Map.of("variant", variant, "recommendations", recommendations);
     }
 
     /**
@@ -271,11 +295,16 @@ public class ReportsController {
             
             var dataP1 = deviceQueryService.handleCustomSummary(userId, period1Start, period1End);
             var dataP2 = deviceQueryService.handleCustomSummary(userId, period2Start, period2End);
-            
+
+            // Q3: recomendaciones + variante control/tratamiento del experimento "personalized-recommendations".
+            var recommendationData = resolveRecommendations(userId);
+
             var resource = CompareConsumptionResourceFromEntityAssembler.toResource(
                     dataP1, period1Start, period1End,
-                    dataP2, period2Start, period2End);
-                    
+                    dataP2, period2Start, period2End,
+                    (List<String>) recommendationData.get("recommendations"),
+                    (String) recommendationData.get("variant"));
+
             if ("pdf".equalsIgnoreCase(format)) {
                 byte[] pdf = reportService.generateComparisonPdf(resource);
                 HttpHeaders headers = new HttpHeaders();
@@ -328,15 +357,7 @@ public class ReportsController {
         double efficiencyScore = (topDevices.isEmpty() || totalConsumptionPeriod <= 0) ? 0.0
                 : Math.max(0.0, 100.0 - (peakConsumption / totalConsumptionPeriod) * 100.0);
 
-        List<String> recommendations = leastEfficientDevice != null
-                ? List.of(
-                    String.format("%s es tu dispositivo de mayor consumo este periodo; revisa cuánto tiempo permanece encendido.", leastEfficientDevice),
-                    "Usa bombillas LED de bajo consumo.",
-                    "Desconecta los electrodomésticos en modo espera.")
-                : List.of(
-                    "Aún no hay suficientes datos de consumo para generar recomendaciones personalizadas.",
-                    "Usa bombillas LED de bajo consumo.",
-                    "Desconecta los electrodomésticos en modo espera.");
+        List<String> recommendations = recommendationQueryService.generateLegacyRecommendations(userId);
 
         var summary = new HashMap<String, Object>();
         summary.put("totalDevices", totalDevices);
@@ -510,9 +531,12 @@ public class ReportsController {
                 // Default comparison or basic PDF
                 var dataP1 = deviceQueryService.handleCustomSummary(userId, LocalDate.now().minusDays(14), LocalDate.now().minusDays(7));
                 var dataP2 = deviceQueryService.handleCustomSummary(userId, LocalDate.now().minusDays(7), LocalDate.now());
+                var recommendationData = resolveRecommendations(userId);
                 var compareConsumptionResource = CompareConsumptionResourceFromEntityAssembler.toResource(
                         dataP1, LocalDate.now().minusDays(14), LocalDate.now().minusDays(7),
-                        dataP2, LocalDate.now().minusDays(7), LocalDate.now());
+                        dataP2, LocalDate.now().minusDays(7), LocalDate.now(),
+                        (List<String>) recommendationData.get("recommendations"),
+                        (String) recommendationData.get("variant"));
                 pdfBytes = reportService.generateComparisonPdf(compareConsumptionResource);
             }
         } catch (Exception e) {

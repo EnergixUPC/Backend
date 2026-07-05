@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 /**
  * US23: escucha PeakHourHighConsumptionDetectedEvent y crea una notificación distinta a la de
  * alto consumo genérico, indicando explícitamente que el consumo ocurrió en horario punta.
+ * La alerta se envía únicamente al usuario dueño del dispositivo (ver {@link
+ * com.backendsems.SEMS.infrastructure.config.StompAuthChannelInterceptor}).
  */
 @Component
 public class PeakHourHighConsumptionEventHandler {
@@ -55,7 +57,6 @@ public class PeakHourHighConsumptionEventHandler {
         );
         notificationCommandService.createNotification(command);
 
-        messagingTemplate.convertAndSend("/topic/alerts", command);
-        messagingTemplate.convertAndSend("/topic/alerts/" + event.getDeviceId(), command);
+        messagingTemplate.convertAndSendToUser(event.getUserId().toString(), "/queue/alerts", command);
     }
 }

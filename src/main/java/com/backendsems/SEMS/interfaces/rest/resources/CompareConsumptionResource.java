@@ -7,7 +7,9 @@ public record CompareConsumptionResource(
     PeriodConsumptionData period1,
     PeriodConsumptionData period2,
     Double difference,
-    Double percentageDifference
+    Double percentageDifference,
+    List<String> recommendations,
+    String experimentVariant
 ) {
     public record PeriodConsumptionData(
         LocalDate startDate,

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 /**
  * Complementa a HighConsumptionDetectedEventHandler: transmite la alerta en tiempo real por
- * WebSocket. Nota: {@code /topic/alerts} es un canal global (no segmentado por usuario), así
- * que todos los clientes conectados reciben la alerta; queda pendiente acotarlo por usuario.
+ * WebSocket, dirigida únicamente al usuario dueño del dispositivo (ver {@link
+ * com.backendsems.SEMS.infrastructure.config.StompAuthChannelInterceptor}).
  */
 @Component
 public class HighConsumptionEventHandler {
@@ -49,8 +49,7 @@ public class HighConsumptionEventHandler {
         );
         notificationCommandService.createNotification(command);
 
-        messagingTemplate.convertAndSend("/topic/alerts", command);
-        messagingTemplate.convertAndSend("/topic/alerts/" + event.getDeviceId(), command);
+        messagingTemplate.convertAndSendToUser(device.getUserId().id().toString(), "/queue/alerts", command);
     }
 }
 
