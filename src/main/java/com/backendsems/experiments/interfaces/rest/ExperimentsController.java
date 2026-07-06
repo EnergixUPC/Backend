@@ -45,7 +45,7 @@ public class ExperimentsController {
     @Operation(summary = "Assign (or retrieve) the variant for a subject in an experiment")
     public ResponseEntity<Map<String, String>> assign(@PathVariable String key,
                                                         @RequestBody AssignmentRequestResource request) {
-        String variant = commandService.handle(new AssignVariantCommand(key, request.subjectId()));
+        String variant = commandService.handle(new AssignVariantCommand(key, request.subjectId(), request.deploymentEnv()));
         return ResponseEntity.ok(Map.of("experimentKey", key, "variant", variant));
     }
 

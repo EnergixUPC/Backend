@@ -10,6 +10,7 @@ import com.backendsems.experiments.domain.services.ExperimentCommandService;
 import com.backendsems.experiments.infrastructure.persistence.jpa.repositories.ExperimentAssignmentRepository;
 import com.backendsems.experiments.infrastructure.persistence.jpa.repositories.ExperimentEventRepository;
 import com.backendsems.experiments.infrastructure.persistence.jpa.repositories.ExperimentRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -23,12 +24,26 @@ public class ExperimentCommandServiceImpl implements ExperimentCommandService {
     private final ExperimentAssignmentRepository assignmentRepository;
     private final ExperimentEventRepository eventRepository;
 
-    public ExperimentCommandServiceImpl(ExperimentRepository experimentRepository,
-                                         ExperimentAssignmentRepository assignmentRepository,
-                                         ExperimentEventRepository eventRepository) {
+    private final String forcedProductionDemoOnboarding;
+    private final String forcedProductionRecommendations;
+    private final String forcedTestDemoOnboarding;
+    private final String forcedTestRecommendations;
+
+    public ExperimentCommandServiceImpl(
+            ExperimentRepository experimentRepository,
+            ExperimentAssignmentRepository assignmentRepository,
+            ExperimentEventRepository eventRepository,
+            @Value("${experiments.force-variant.production.demo-onboarding:}") String forcedProductionDemoOnboarding,
+            @Value("${experiments.force-variant.production.personalized-recommendations:}") String forcedProductionRecommendations,
+            @Value("${experiments.force-variant.test.demo-onboarding:}") String forcedTestDemoOnboarding,
+            @Value("${experiments.force-variant.test.personalized-recommendations:}") String forcedTestRecommendations) {
         this.experimentRepository = experimentRepository;
         this.assignmentRepository = assignmentRepository;
         this.eventRepository = eventRepository;
+        this.forcedProductionDemoOnboarding = blankToNull(forcedProductionDemoOnboarding);
+        this.forcedProductionRecommendations = blankToNull(forcedProductionRecommendations);
+        this.forcedTestDemoOnboarding = blankToNull(forcedTestDemoOnboarding);
+        this.forcedTestRecommendations = blankToNull(forcedTestRecommendations);
     }
 
     @Override
@@ -38,10 +53,11 @@ public class ExperimentCommandServiceImpl implements ExperimentCommandService {
             return existing.get().getVariant();
         }
 
-        Experiment experiment = experimentRepository.findById(command.experimentKey())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown experiment: " + command.experimentKey()));
+        String forcedVariant = resolveForcedVariant(command.deploymentEnv(), command.experimentKey());
+        String variant = forcedVariant != null
+                ? forcedVariant
+                : pickVariant(mustFindExperiment(command.experimentKey()), command.subjectId());
 
-        String variant = pickVariant(experiment, command.subjectId());
         assignmentRepository.save(new ExperimentAssignment(command.experimentKey(), command.subjectId(), variant));
         return variant;
     }
@@ -69,6 +85,31 @@ public class ExperimentCommandServiceImpl implements ExperimentCommandService {
     private void seedIfMissing(String key, String variantsCsv) {
         if (experimentRepository.existsById(key)) return;
         experimentRepository.save(new Experiment(key, variantsCsv, true));
+    }
+
+    private Experiment mustFindExperiment(String experimentKey) {
+        return experimentRepository.findById(experimentKey)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown experiment: " + experimentKey));
+    }
+
+    /**
+     * Devuelve la variante forzada para (deploymentEnv, experimentKey) según
+     * experiments.force-variant.*, o {@code null} si no aplica (deploymentEnv ausente, o sin
+     * override configurado para ese par) — en cuyo caso se usa el bucketing aleatorio.
+     */
+    private String resolveForcedVariant(String deploymentEnv, String experimentKey) {
+        if ("production".equals(deploymentEnv)) {
+            if ("demo-onboarding".equals(experimentKey)) return forcedProductionDemoOnboarding;
+            if ("personalized-recommendations".equals(experimentKey)) return forcedProductionRecommendations;
+        } else if ("test".equals(deploymentEnv)) {
+            if ("demo-onboarding".equals(experimentKey)) return forcedTestDemoOnboarding;
+            if ("personalized-recommendations".equals(experimentKey)) return forcedTestRecommendations;
+        }
+        return null;
+    }
+
+    private static String blankToNull(String value) {
+        return (value == null || value.isBlank()) ? null : value;
     }
 
     /** Hash estable de subjectId+experimentKey en [0,100) contra el peso acumulado de cada variante. */

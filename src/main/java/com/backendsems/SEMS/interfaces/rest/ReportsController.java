@@ -97,9 +97,9 @@ public class ReportsController {
      * Q3: resuelve (asignando si hace falta) la variante de control/tratamiento del usuario para
      * el experimento de recomendaciones personalizadas, y genera las recomendaciones correspondientes.
      */
-    private Map<String, Object> resolveRecommendations(UserId userId) {
+    private Map<String, Object> resolveRecommendations(UserId userId, String deploymentEnv) {
         String variant = experimentCommandService.handle(
-                new AssignVariantCommand(RECOMMENDATIONS_EXPERIMENT_KEY, userId.id().toString()));
+                new AssignVariantCommand(RECOMMENDATIONS_EXPERIMENT_KEY, userId.id().toString(), deploymentEnv));
         List<String> recommendations = "treatment".equals(variant)
                 ? recommendationQueryService.generatePersonalizedRecommendations(userId)
                 : recommendationQueryService.generateLegacyRecommendations(userId);
@@ -284,7 +284,8 @@ public class ReportsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period1End,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period2Start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate period2End,
-            @RequestParam(required = false) String format) {
+            @RequestParam(required = false) String format,
+            @RequestParam(required = false) String deploymentEnv) {
         try {
             String token = authHeader.replace("Bearer ", "");
             String email = tokenService.getEmailFromToken(token);
@@ -297,7 +298,7 @@ public class ReportsController {
             var dataP2 = deviceQueryService.handleCustomSummary(userId, period2Start, period2End);
 
             // Q3: recomendaciones + variante control/tratamiento del experimento "personalized-recommendations".
-            var recommendationData = resolveRecommendations(userId);
+            var recommendationData = resolveRecommendations(userId, deploymentEnv);
 
             var resource = CompareConsumptionResourceFromEntityAssembler.toResource(
                     dataP1, period1Start, period1End,
@@ -531,7 +532,7 @@ public class ReportsController {
                 // Default comparison or basic PDF
                 var dataP1 = deviceQueryService.handleCustomSummary(userId, LocalDate.now().minusDays(14), LocalDate.now().minusDays(7));
                 var dataP2 = deviceQueryService.handleCustomSummary(userId, LocalDate.now().minusDays(7), LocalDate.now());
-                var recommendationData = resolveRecommendations(userId);
+                var recommendationData = resolveRecommendations(userId, null);
                 var compareConsumptionResource = CompareConsumptionResourceFromEntityAssembler.toResource(
                         dataP1, LocalDate.now().minusDays(14), LocalDate.now().minusDays(7),
                         dataP2, LocalDate.now().minusDays(7), LocalDate.now(),
